@@ -311,5 +311,17 @@ Devise.setup do |config|
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
 
-  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+  # We specify that for every sessions POST request (login), we want to
+  # append the JWT token to the 'Authorization' header.
+  config.jwt do |jwt|
+    jwt.secret = Rails.application.credentials.devise_jwt_secret_key!
+    jwt.dispatch_requests = [
+      ['POST', %r{^/login$}]
+    ]
+    # We also specify that for every sessions DELETE request (logout) it should revoke the JWT token.
+    jwt.revocation_requests = [
+      ['DELETE', %r{^/logout$}]
+    ]
+    jwt.expiration_time = 7.days.to_i
+  end
 end
