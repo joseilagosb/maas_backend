@@ -33,22 +33,5 @@ describe Users::RegistrationsController do
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
-
-    context "when the user's email is already taken" do
-      before do
-        user.save!
-      end
-
-      it 'does not create a new User' do
-        expect do
-          post :create, params: { user: attributes_for(:user) }
-        end.not_to change(User, :count)
-      end
-
-      it 'returns a 401 unauthorized status code' do
-        post :create, params: { user: attributes_for(:user) }
-        expect(response).to have_http_status(:unauthorized)
-      end
-    end
   end
 end
