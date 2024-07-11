@@ -1,23 +1,23 @@
 class ServicesController < ApplicationController
-  before_action :check_admin, only: %i[new create]
+  before_action :check_admin, only: %i[create]
 
   def index
-    render json: 'hello world'
-  end
-
-  def new
-    render json: 'hello you must be an admin'
+    services = Service.all
+    render json: services, status: :ok                                    
   end
 
   def create
-    render json: 'hello you must be an admin'
+    service = Service.new(service_params)
+    if service.save!
+      render json: service
+    else
+      render json: service.errors.full_messages, status: :unprocessable_entity
+    end
   end
 
   private
 
-  def check_admin
-    unless current_user.admin?
-      render json: 'nope you are not an admin', status: :unauthorized
-    end
+  def service_params
+    params.require(:service).permit(:name, :from, :to)
   end
 end

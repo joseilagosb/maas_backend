@@ -3,29 +3,24 @@ require 'rails_helper'
 describe ServicesController do
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
+  let(:service) { build(:service) }
 
   shared_examples 'user access to services' do
     describe 'GET #index' do
-      it 'returns hello world' do
-        get :index
-        expect(response.body).to eq('hello world')
+      it 'returns all services' do
+        services = create_list(:service, 3) 
+        get :index, format: :json
+        expect(response.body).to eq(services.to_json)
       end
     end
   end
 
   shared_examples 'full access to services' do
-    describe 'GET #new' do
-      it 'returns hello you must be an admin' do
-        get 'new' do
-          expect(response.body).to eq('hello you must be an admin')
-        end
-      end
-    end
-
     describe 'POST #create' do
-      it 'returns hello you must be an admin' do
-        post :create
-        expect(response.body).to eq('hello you must be an admin')
+      it 'creates a new service' do
+        expect{
+          post :create, params: { service: attributes_for(:service) }, format: :json
+        }.to change(Service, :count).by(1)
       end
     end 
   end
@@ -38,17 +33,9 @@ describe ServicesController do
 
     it_behaves_like 'user access to services'
 
-    describe 'GET #new' do
-      it 'denies access' do
-        get :new
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.body).to eq('nope you are not an admin')
-      end
-    end
-
     describe 'POST #create' do
       it 'denies access' do
-        post :create
+        post :create, format: :json
         expect(response).to have_http_status(:unauthorized)
         expect(response.body).to eq('nope you are not an admin')
       end
