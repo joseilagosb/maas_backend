@@ -9,5 +9,6 @@ Rails.application.routes.draw do
                        sessions: 'users/sessions',
                        registrations: 'users/registrations'
                      }
-  resources :services
+
+  resources :services, only: %i[index new create]    
 end

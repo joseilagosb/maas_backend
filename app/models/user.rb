@@ -6,4 +6,11 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :jwt_authenticatable, jwt_revocation_strategy: self
   devise :validatable, password_length: 6..64
+
+  enum role: [:user, :admin]
+  after_initialize :init_role, if: :new_record?
+
+  def init_role
+    self.role ||= :user
+  end
 end
