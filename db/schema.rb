@@ -10,13 +10,38 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_11_022006) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_12_153206) do
+  create_table "service_days", force: :cascade do |t|
+    t.integer "day"
+    t.integer "service_week_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_week_id"], name: "index_service_days_on_service_week_id"
+  end
+
+  create_table "service_hours", force: :cascade do |t|
+    t.integer "hour"
+    t.integer "service_day_id", null: false
+    t.integer "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_day_id"], name: "index_service_hours_on_service_day_id"
+    t.index ["user_id"], name: "index_service_hours_on_user_id"
+  end
+
+  create_table "service_weeks", force: :cascade do |t|
+    t.integer "week"
+    t.integer "service_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id"], name: "index_service_weeks_on_service_id"
+  end
+
   create_table "services", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name"
-    t.date "from"
-    t.date "to"
+    t.boolean "active", default: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -35,4 +60,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_11_022006) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "service_days", "service_weeks"
+  add_foreign_key "service_hours", "service_days"
+  add_foreign_key "service_hours", "users"
+  add_foreign_key "service_weeks", "services"
 end

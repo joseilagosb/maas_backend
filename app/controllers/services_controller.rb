@@ -8,7 +8,10 @@ class ServicesController < ApplicationController
 
   def show
     service = Service.find(params[:id])
-    render json: ServiceSerializer.new(service).serializable_hash[:data], status: :ok
+    options = {
+      include: [:service_weeks]
+    }
+    render json: ServiceSerializer.new(service, options).serializable_hash, status: :ok
   end
 
   def create
