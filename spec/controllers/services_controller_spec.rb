@@ -1,16 +1,31 @@
 require 'rails_helper'
+require 'matchers/equal_serialized'
 
 describe ServicesController do
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
   let(:service) { build(:service) }
-
+  
   shared_examples 'user access to services' do
     describe 'GET #index' do
       it 'returns all services' do
         services = create_list(:service, 3) 
         get :index, format: :json
-        expect(response.body).to eq(services.to_json)
+
+        parsed_services = JSON.parse(response.body)
+        
+        expect(services).to equal_serialized(parsed_services)
+      end
+    end
+
+    describe 'GET #show' do
+      it 'returns a service' do
+        service = create(:service)
+        get :show, params: { id: service.id }, format: :json
+
+        parsed_service = JSON.parse(response.body)
+
+        expect(service).to equal_serialized(parsed_service)
       end
     end
   end

@@ -53,6 +53,7 @@ group :development, :test do
   gem 'factory_bot_rails', '~> 6.2.0'
   gem 'guard-rspec', require: false
   gem 'rspec-rails', '~> 6.1.0'
+  gem 'rspec_jsonapi_serializer'
 end
 
 group :development do

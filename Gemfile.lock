@@ -297,6 +297,8 @@ GEM
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
     rspec-support (3.13.1)
+    rspec_jsonapi_serializer (1.3.2)
+      jsonapi-serializer (~> 2.0)
     rubocop (1.64.1)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
@@ -392,6 +394,7 @@ DEPENDENCIES
   rack-cors (~> 2.0)
   rails (~> 7.1.3, >= 7.1.3.4)
   rspec-rails (~> 6.1.0)
+  rspec_jsonapi_serializer
   rubocop-rails
   selenium-webdriver
   sprockets-rails

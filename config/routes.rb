@@ -10,5 +10,5 @@ Rails.application.routes.draw do
                        registrations: 'users/registrations'
                      }
 
-  resources :services, only: %i[index new create]    
+  resources :services, only: %i[index new create show]    
 end
