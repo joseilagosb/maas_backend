@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_12_153206) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_13_082227) do
   create_table "service_days", force: :cascade do |t|
     t.integer "day"
     t.integer "service_week_id", null: false
@@ -37,6 +37,16 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_12_153206) do
     t.index ["service_id"], name: "index_service_weeks_on_service_id"
   end
 
+  create_table "service_working_days", force: :cascade do |t|
+    t.integer "service_id", null: false
+    t.integer "day"
+    t.integer "from"
+    t.integer "to"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id"], name: "index_service_working_days_on_service_id"
+  end
+
   create_table "services", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -55,6 +65,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_12_153206) do
     t.string "jti"
     t.string "name"
     t.integer "role", default: 0
+    t.integer "color"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["jti"], name: "index_users_on_jti", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -64,4 +75,5 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_12_153206) do
   add_foreign_key "service_hours", "service_days"
   add_foreign_key "service_hours", "users"
   add_foreign_key "service_weeks", "services"
+  add_foreign_key "service_working_days", "services"
 end

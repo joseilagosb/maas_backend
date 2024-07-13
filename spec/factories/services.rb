@@ -2,18 +2,14 @@ FactoryBot.define do
   factory :service do
     sequence(:id) { |n| n }
     name {"#{Faker::App.name} financing"}
-    from {Date.new(2022, 1, 1).rfc2822}
-    to {Date.new(2022, 5, 31).rfc2822}
-  end
+    active {true}
 
-  factory :serialized_service do
-    type {"service"}
-    attributes {
-      {
-        name: service.name,
-        from: service.from,
-        to: service.to
-      }
-    }
+    transient do
+      service_weeks_count {Time.now.strftime("%U").to_i}
+    end
+
+    after(:create) do |service, evaluator|
+      create_list(:service_week, evaluator.service_weeks_count, service: service)
+    end
   end
 end

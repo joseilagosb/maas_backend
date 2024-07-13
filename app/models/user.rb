@@ -8,6 +8,7 @@ class User < ApplicationRecord
   devise :validatable, password_length: 6..64
 
   enum role: [:user, :admin]
+  enum color: [:red, :green, :blue, :yellow, :orange, :purple, :pink]
   after_initialize :init_role, if: :new_record?
 
   def init_role

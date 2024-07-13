@@ -1,10 +1,10 @@
 require 'rails_helper'
-require 'matchers/equal_serialized'
+require 'matchers/serialized_equals'
 
 describe ServicesController do
+  let(:service) { build(:service) }
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
-  let(:service) { build(:service) }
   
   shared_examples 'user access to services' do
     describe 'GET #index' do
@@ -14,7 +14,7 @@ describe ServicesController do
 
         parsed_services = JSON.parse(response.body)
         
-        expect(services).to equal_serialized(parsed_services)
+        expect(parsed_services).to serialized_equals(services)
       end
     end
 
@@ -23,9 +23,12 @@ describe ServicesController do
         service = create(:service)
         get :show, params: { id: service.id }, format: :json
 
-        parsed_service = JSON.parse(response.body)
+        parsed_body = JSON.parse(response.body)
+        parsed_service = parsed_body["service"]
+        parsed_service_weeks = parsed_body["included"]
 
-        expect(service).to equal_serialized(parsed_service)
+        expect(parsed_service).to serialized_equals(service)
+        expect(parsed_service_weeks).to serialized_equals(service.service_weeks)
       end
     end
   end

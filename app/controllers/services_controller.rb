@@ -8,10 +8,9 @@ class ServicesController < ApplicationController
 
   def show
     service = Service.find(params[:id])
-    options = {
-      include: [:service_weeks]
-    }
-    render json: ServiceSerializer.new(service, options).serializable_hash, status: :ok
+    render json: ServiceSerializer.new(service, {
+      include: [:service_weeks, :service_working_days]
+    }).serializable_hash, status: :ok
   end
 
   def create
@@ -26,6 +25,6 @@ class ServicesController < ApplicationController
   private
 
   def service_params
-    params.require(:service).permit(:name, :from, :to)
+    params.require(:service).permit(:id, :name, :active)
   end
 end

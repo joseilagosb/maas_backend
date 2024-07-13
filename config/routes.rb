@@ -10,5 +10,7 @@ Rails.application.routes.draw do
                        registrations: 'users/registrations'
                      }
 
-  resources :services, only: %i[index new create show]    
+  resources :services, only: %i[index new create show] do
+    resources :service_weeks, only: %i[show]
+  end
 end
