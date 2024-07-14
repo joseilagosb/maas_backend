@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_13_082227) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
   create_table "service_days", force: :cascade do |t|
     t.integer "day"
     t.integer "service_week_id", null: false
@@ -22,11 +22,20 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_082227) do
   create_table "service_hours", force: :cascade do |t|
     t.integer "hour"
     t.integer "service_day_id", null: false
+    t.integer "designated_user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["designated_user_id"], name: "index_service_hours_on_designated_user_id"
+    t.index ["service_day_id"], name: "index_service_hours_on_service_day_id"
+  end
+
+  create_table "service_hours_users", force: :cascade do |t|
+    t.integer "service_hour_id", null: false
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["service_day_id"], name: "index_service_hours_on_service_day_id"
-    t.index ["user_id"], name: "index_service_hours_on_user_id"
+    t.index ["service_hour_id"], name: "index_service_hours_users_on_service_hour_id"
+    t.index ["user_id"], name: "index_service_hours_users_on_user_id"
   end
 
   create_table "service_weeks", force: :cascade do |t|
@@ -48,10 +57,10 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_082227) do
   end
 
   create_table "services", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.string "name"
     t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
@@ -73,7 +82,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_082227) do
 
   add_foreign_key "service_days", "service_weeks"
   add_foreign_key "service_hours", "service_days"
-  add_foreign_key "service_hours", "users"
+  add_foreign_key "service_hours", "users", column: "designated_user_id"
+  add_foreign_key "service_hours_users", "service_hours"
+  add_foreign_key "service_hours_users", "users"
   add_foreign_key "service_weeks", "services"
   add_foreign_key "service_working_days", "services"
 end

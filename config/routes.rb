@@ -9,8 +9,9 @@ Rails.application.routes.draw do
                        sessions: 'users/sessions',
                        registrations: 'users/registrations'
                      }
-
+  get '/users', to: 'users#index'
+  
   resources :services, only: %i[index new create show] do
-    resources :service_weeks, only: %i[show]
+    resources :service_weeks, only: %i[show edit]
   end
 end

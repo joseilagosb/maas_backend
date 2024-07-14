@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
 
+  has_and_belongs_to_many :users
+
   validates :name, presence: true, uniqueness: true
 
   devise :database_authenticatable, :registerable,
