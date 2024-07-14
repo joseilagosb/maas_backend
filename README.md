@@ -1,29 +1,44 @@
-# README
+# MaaS (Monitoring as a Service) Backend API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+API para el proyecto MaaS (Monitoring as a Service) desarrollado con Ruby on Rails.
 
-Things you may want to cover:
+## Modelo relacional
 
-- Ruby version
+Las tablas utilizadas en el proyecto son las siguientes:
 
-- System dependencies
+1. **Users:** Almacena los usuarios registrados en el sistema. Contiene información esencial de los usuarios, como nombre, correo electrónico, contraseña, etc. Además contiene el rol del usuario (admin o usuario). 1
 
-- Configuration
+2. **Services:** Contiene información sobre los servicios que se monitorean en el sistema. Además del nombre y el estado actual del servicio (en actividad o inactivo), almacena una referencia a las semanas de servicio que se desean monitorear.
 
-- Database creation
+### Semanas de servicio (service weeks):
 
-- Database initialization
+3. **ServiceWeeks:** Contiene información sobre las semanas de trabajo que se monitorean en el sistema. Contiene un máximo de 7 ServiceDays, correspondientes a los días de la semana.
 
-- How to run the test suite
+4. **ServiceDays:** Contiene información sobre los días de la semana que se monitorean en el sistema. Contiene un máximo de 24 ServiceHours, correspondientes a las horas de trabajo.
 
-- Services (job queues, cache servers, search engines, etc.)
+5. **ServiceHours:** Contiene información sobre las horas de trabajo que se monitorean en el sistema. Aquí se almacenan tanto los usuarios que se encuentran disponibles para ser asignados para el turno, como también el usuario que ha sido designado para el turno de acuerdo a la última ejecución del algoritmo de asignación.
 
-- Deployment instructions
+6. **ServiceHoursUsers:** Tabla pivote que relaciona las horas de trabajo con los usuarios que se encuentran disponibles para ser asignados para el turno. El número máximo de instancias asociadas a una misma hora es igual al total de usuarios en el sistema.
 
-- ...
+### Semanas de trabajo (working days):
 
-# Instalación del proyecto
+6. **ServiceWorkingDays:** Contiene información sobre los días de trabajo que se monitorean en el sistema.
+
+![maas-mr](maas-mr.png)
+
+## Dependencias utilizadas
+
+- Ruby on Rails
+- Devise
+- JWT
+
+### Testing
+
+- RSpec
+- Guard
+- FactoryBot
+
+## Instalación del proyecto
 
 **1.** Instalar las gemas con el comando
 
@@ -69,7 +84,7 @@ rails db:seed
 rails s
 ```
 
-# Pruebas
+## Pruebas
 
 Los tests unitarios y de features fueron realizados con **RSpec** siguiendo el principio de TDD (_Test Driven Development_). Para la ejecución de los tests se utilizó la gema **Guard**, que se encarga de ejecutar los tests en tiempo real según la ubicación del archivo modificado en nuestro proyecto.
 

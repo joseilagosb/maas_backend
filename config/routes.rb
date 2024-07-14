@@ -12,6 +12,6 @@ Rails.application.routes.draw do
   get '/users', to: 'users#index'
   
   resources :services, only: %i[index new create show] do
-    resources :service_weeks, only: %i[show edit]
+    resources :service_weeks, only: %i[show edit create update]
   end
 end
