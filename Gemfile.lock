@@ -213,6 +213,7 @@ GEM
     parser (3.3.3.0)
       ast (~> 2.4.1)
       racc
+    pg (1.5.6)
     pry (0.14.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -331,9 +332,6 @@ GEM
       actionpack (>= 6.1)
       activesupport (>= 6.1)
       sprockets (>= 3.0.0)
-    sqlite3 (1.6.9)
-      mini_portile2 (~> 2.8.0)
-    sqlite3 (1.6.9-x86_64-linux)
     stimulus-rails (1.3.3)
       railties (>= 6.0.0)
     stringio (3.1.1)
@@ -390,6 +388,7 @@ DEPENDENCIES
   jbuilder
   jsonapi-serializer (~> 2.2)
   net-http
+  pg (~> 1.1)
   puma (>= 5.0)
   rack-cors (~> 2.0)
   rails (~> 7.1.3, >= 7.1.3.4)
@@ -398,7 +397,6 @@ DEPENDENCIES
   rubocop-rails
   selenium-webdriver
   sprockets-rails
-  sqlite3 (~> 1.4)
   stimulus-rails
   turbo-rails
   tzinfo-data
@@ -407,7 +405,7 @@ DEPENDENCIES
   webdrivers
 
 RUBY VERSION
-   ruby 2.7.2p137
+   ruby 3.2.0p0
 
 BUNDLED WITH
-   2.1.4
+   2.5.15

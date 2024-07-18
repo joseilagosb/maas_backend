@@ -3,7 +3,7 @@ class ServicesController < ApplicationController
 
   def index
     services = Service.all
-    render json: ServiceSerializer.new(services).serializable_hash[:data], status: :ok
+    render json: ServiceSerializer.new(services).serializable_hash, status: :ok
   end
 
   def show
