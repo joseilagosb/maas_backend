@@ -11,9 +11,12 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
   create_table "service_days", force: :cascade do |t|
     t.integer "day"
-    t.integer "service_week_id", null: false
+    t.bigint "service_week_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["service_week_id"], name: "index_service_days_on_service_week_id"
@@ -21,8 +24,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
 
   create_table "service_hours", force: :cascade do |t|
     t.integer "hour"
-    t.integer "service_day_id", null: false
-    t.integer "designated_user_id"
+    t.bigint "service_day_id", null: false
+    t.bigint "designated_user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["designated_user_id"], name: "index_service_hours_on_designated_user_id"
@@ -30,8 +33,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
   end
 
   create_table "service_hours_users", force: :cascade do |t|
-    t.integer "service_hour_id", null: false
-    t.integer "user_id", null: false
+    t.bigint "service_hour_id", null: false
+    t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["service_hour_id"], name: "index_service_hours_users_on_service_hour_id"
@@ -40,14 +43,14 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
 
   create_table "service_weeks", force: :cascade do |t|
     t.integer "week"
-    t.integer "service_id", null: false
+    t.bigint "service_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["service_id"], name: "index_service_weeks_on_service_id"
   end
 
   create_table "service_working_days", force: :cascade do |t|
-    t.integer "service_id", null: false
+    t.bigint "service_id", null: false
     t.integer "day"
     t.integer "from"
     t.integer "to"

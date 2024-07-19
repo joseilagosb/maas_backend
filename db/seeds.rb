@@ -2,12 +2,12 @@ require 'faker'
 
 p 'Eliminando datos anteriores... (esto puede tomar unos segundos)'
 
-ServiceDay.destroy_all
-ServiceHour.destroy_all
-ServiceWeek.destroy_all
-ServiceWorkingDay.destroy_all
-Service.destroy_all
-User.destroy_all
+ServiceDay.delete_all
+ServiceHour.delete_all
+ServiceWeek.delete_all
+ServiceWorkingDay.delete_all
+Service.delete_all
+User.delete_all
 
 p 'Creando usuarios...'
 
@@ -20,17 +20,23 @@ admins = User.create!([
   { name: "Pepe", email: "pepe@maas.com", password: 'contrasena_admin', role: :admin, color: :green },
 ])
 
+SERVICES_LENGTH = 5
+
+USERS_LENGTH = 3
+
 service_type = ["mobile", "analytics", "web", "api", "financial"]
 
 service_hours = [
   { weekdays: (17..22).to_a, weekends: (12..23).to_a },
   { weekdays: (13..20).to_a, weekends: (10..20).to_a },
-  { weekdays: (9..15).to_a, weekends: (15..23).to_a },
+  { weekdays: (9..15).to_a, weekends: [] },
+  { weekdays: [], weekends: (12..23).to_a },
+  { weekdays: (9..18).to_a, weekends: [] },
 ]
 
 p 'Creando servicios... (esto si va a tomar harto tiempo)'
 
-3.times do |index|
+services = Array.new(SERVICES_LENGTH) do |index|
   p "Creando servicio #{index + 1}"
   service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}" })
 
@@ -50,7 +56,11 @@ p 'Creando servicios... (esto si va a tomar harto tiempo)'
   end
 
   current_week = Time.now.strftime("%U").to_i
-  weeks = (1..(current_week + 1)).to_a
+  
+  starting_week = rand(15..(current_week + 1))
+  ending_week = current_week + 1
+
+  weeks = (starting_week..ending_week).to_a
   weeks.each do |week|
     service_week = service.service_weeks.build({ week: week })
     days = (1..7).to_a
@@ -62,40 +72,38 @@ p 'Creando servicios... (esto si va a tomar harto tiempo)'
       case day
       when 1..5
         weekdayHours.each do |hour|
-          designated_user = users.sample
-          users_not_designated = users.excluding(designated_user)
-          available_users = users_not_designated.sample((0..(users_not_designated.length)).to_a.sample)
+          designated_user_index = rand(0..(USERS_LENGTH - 1))
+          user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
+          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length - 1)))
 
           service_hour = service_day.service_hours.build({ 
               hour: hour, 
-              designated_user: users.sample,
+              designated_user: users[designated_user_index],
+              users: users.values_at(*available_users_indexes)
            })
-          service_hour.users << designated_user
-          available_users.each do |available_user| 
-            service_hour.users << available_user
-          end
+
         end
       else
         weekendHours.each do |hour|
-          designated_user = users.sample
-          users_not_designated = users.excluding(designated_user)
-          available_users = users_not_designated.sample((0..(users_not_designated.length)).to_a.sample)
-          available_users << designated_user
+          designated_user_index = rand(0..(USERS_LENGTH - 1))
+          user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
+          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length - 1)))
 
           service_hour = service_day.service_hours.build({ 
-            hour: hour, 
-            designated_user: users.sample,
-          })
-          service_hour.users << designated_user
-          available_users.each do |available_user| 
-            service_hour.users << available_user
-          end
+              hour: hour, 
+              designated_user: users[designated_user_index],
+              users: users.values_at(*available_users_indexes)
+           })
         end
       end
     end
   end
 
-  service.save!
+  service
+end
+
+Service.transaction do
+  services.save!
 end
 
 puts 'Seeds insertados con éxito'
