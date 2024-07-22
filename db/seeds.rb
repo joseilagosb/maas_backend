@@ -2,8 +2,9 @@ require 'faker'
 
 p 'Eliminando datos anteriores... (esto puede tomar unos segundos)'
 
-ServiceDay.delete_all
+ServiceHourUser.delete_all
 ServiceHour.delete_all
+ServiceDay.delete_all
 ServiceWeek.delete_all
 ServiceWorkingDay.delete_all
 Service.delete_all
@@ -34,9 +35,9 @@ service_hours = [
   { weekdays: (9..18).to_a, weekends: [] },
 ]
 
-p 'Creando servicios... (esto si va a tomar harto tiempo)'
+p 'Creando servicios...'
 
-services = Array.new(SERVICES_LENGTH) do |index|
+services = Array.new(5) do |index|
   p "Creando servicio #{index + 1}"
   service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}" })
 
@@ -66,34 +67,33 @@ services = Array.new(SERVICES_LENGTH) do |index|
     days = (1..7).to_a
     days.each do |day| 
       service_day = service_week.service_days.build({ day: day })
-      weekdayHours = service_hours[index][:weekdays]
-      weekendHours = service_hours[index][:weekends]
-      
+
       case day
       when 1..5
-        weekdayHours.each do |hour|
+        service_hours[index][:weekdays].each do |hour|
           designated_user_index = rand(0..(USERS_LENGTH - 1))
           user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
-          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length - 1)))
+          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length)))
+          available_users_indexes << designated_user_index
 
           service_hour = service_day.service_hours.build({ 
-              hour: hour, 
-              designated_user: users[designated_user_index],
-              users: users.values_at(*available_users_indexes)
-           })
-
+            hour: hour, 
+            designated_user: users[designated_user_index],
+            users: users.values_at(*available_users_indexes)
+          })
         end
       else
-        weekendHours.each do |hour|
+        service_hours[index][:weekends].each do |hour|
           designated_user_index = rand(0..(USERS_LENGTH - 1))
           user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
-          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length - 1)))
+          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length)))
+          available_users_indexes << designated_user_index
 
           service_hour = service_day.service_hours.build({ 
-              hour: hour, 
-              designated_user: users[designated_user_index],
-              users: users.values_at(*available_users_indexes)
-           })
+            hour: hour, 
+            designated_user: users[designated_user_index],
+            users: users.values_at(*available_users_indexes)
+          })
         end
       end
     end
@@ -102,8 +102,10 @@ services = Array.new(SERVICES_LENGTH) do |index|
   service
 end
 
+p 'Guardando en la base de datos...'
+
 Service.transaction do
-  services.save!
+  services.each(&:save!)
 end
 
-puts 'Seeds insertados con éxito'
+p 'Seeds insertados con éxito'

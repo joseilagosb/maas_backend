@@ -6,7 +6,7 @@ API para el proyecto MaaS (Monitoring as a Service) desarrollado con Ruby on Rai
 
 Las tablas utilizadas en el proyecto son las siguientes:
 
-1. **Users:** Almacena los usuarios registrados en el sistema. Contiene información esencial de los usuarios, como nombre, correo electrónico, contraseña, etc. Además contiene el rol del usuario (admin o usuario). 1
+1. **Users:** Almacena los usuarios registrados en el sistema. Contiene información esencial de los usuarios, como nombre, correo electrónico, contraseña, etc. Además contiene el rol del usuario (admin o usuario).
 
 2. **Services:** Contiene información sobre los servicios que se monitorean en el sistema. Además del nombre y el estado actual del servicio (en actividad o inactivo), almacena una referencia a las semanas de servicio que se desean monitorear.
 
@@ -28,7 +28,9 @@ Las tablas utilizadas en el proyecto son las siguientes:
 
 ## Dependencias utilizadas
 
-- Ruby on Rails
+- Ruby (v3.2.0)
+- Ruby on Rails (v7.1.3)
+- PostgreSQL
 - Devise
 - JWT
 
@@ -52,25 +54,13 @@ bundle install
 bundle exec rails secret
 ```
 
-**3.** El resultado del comando anterior es un hash largo que debe ser guardado en el archivo config/credentials.yml.enc. Para editarlo en nuestro editor de código ejecutamos en nuestra consola (para el ejemplo usaré VS Code):
-
-```bash
-EDITOR='code --wait' rails credentials:edit
-```
-
-Dentro del código insertamos el hash con la key _devise_jwt_secret_key_.
-
-```
-devise_jwt_secret_key: <el secret generado del paso anterior>
-```
-
-De manera alternativa, puedes insertarlo directamente en el archivo .env con el mismo atributo. Se verificará primero la existencia del secret en _credentials.yml.enc_ y luego en _.env_.
+El resultado del comando anterior es un hash largo que debemos copiar y pegar en el archivo .env. El nombre de la variable de entorno debe ser DEVISE_JWT_SECRET_KEY.
 
 ```
 DEVISE_JWT_SECRET_KEY=<el secret generado del paso anterior>
 ```
 
-**4.** Crear la base de datos y agregar migraciones y seeders con los comandos
+**3.** Crear la base de datos y agregar migraciones y seeders con los comandos
 
 ```bash
 rails db:create
@@ -78,7 +68,7 @@ rails db:migrate
 rails db:seed
 ```
 
-**5.** Ejecutar el proyecto con el comando
+**4.** Ejecutar el proyecto con el comando
 
 ```bash
 rails s
@@ -91,5 +81,5 @@ Los tests unitarios y de features fueron realizados con **RSpec** siguiendo el p
 Para verificar los tests ejecutar el comando:
 
 ```bash
-bundle exec rspec
+bundle exec guard
 ```

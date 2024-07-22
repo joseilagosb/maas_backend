@@ -9,7 +9,7 @@ gem 'rails', '~> 7.1.3', '>= 7.1.3.4'
 gem 'sprockets-rails'
 
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
+gem 'pg', '~> 1.1'
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
@@ -45,21 +45,18 @@ gem 'bootsnap', require: false
 # gem "image_processing", "~> 1.2"
 
 gem 'net-http'
-gem 'uri', '0.10.0'
+gem 'uri', '0.10.0.3'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem 'debug', platforms: %i[mri mswin mswin64 mingw x64_mingw]
   gem 'factory_bot_rails', '~> 6.2.0'
   gem 'guard-rspec', require: false
-  gem 'rspec-rails', '~> 6.1.0'
   gem 'rspec_jsonapi_serializer'
+  gem 'rspec-rails', '~> 6.1.0'
 end
 
 group :development do
-  # Use console on exceptions pages [https://github.com/rails/web-console]
-  gem 'web-console'
-
   # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
   # gem "rack-mini-profiler"
 
@@ -67,13 +64,6 @@ group :development do
   # gem "spring"
 
   gem 'rubocop-rails', require: false
-end
-
-group :test do
-  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem 'capybara'
-  gem 'selenium-webdriver'
-  gem 'webdrivers'
 end
 
 gem 'dotenv-rails'
