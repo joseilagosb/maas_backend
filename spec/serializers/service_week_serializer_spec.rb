@@ -13,4 +13,9 @@ RSpec.describe ServiceWeekSerializer, type: :serializer do
     expect(serializer).to have_attribute(:id)
     expect(serializer).to have_attribute(:week)
   end
+
+  it('serializes the relationships') do
+    expect(serializer).to have_many(:service_days)
+    expect(serializer).to belong_to(:service)
+  end
 end

@@ -314,7 +314,7 @@ Devise.setup do |config|
   # We specify that for every sessions POST request (login), we want to
   # append the JWT token to the 'Authorization' header.
   config.jwt do |jwt|
-    jwt.secret = ENV['DEVISE_JWT_SECRET_KEY'] || ENV['DEVISE_JWT_SECRET_KEY_DUMMY']
+    jwt.secret = ENV['DEVISE_JWT_SECRET_KEY'] || ENV.fetch('DEVISE_JWT_SECRET_KEY_DUMMY', nil)
     jwt.dispatch_requests = [
       ['POST', %r{^/login$}]
     ]

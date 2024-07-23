@@ -10,8 +10,8 @@ Rails.application.routes.draw do
                        registrations: 'users/registrations'
                      }
   get '/users', to: 'users#index'
-  
-  resources :services, only: %i[index new create show] do
-    resources :service_weeks, only: %i[show edit create update]
+
+  resources :services, only: %i[index show] do
+    resources :service_weeks, only: %i[show edit]
   end
 end
