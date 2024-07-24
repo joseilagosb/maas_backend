@@ -1,11 +1,12 @@
 FactoryBot.define do
   factory :service_day do
     sequence(:id) { |n| n }
-    sequence(:day) { |n| n % 7 }
-    association :service_week, factory: :service_week
+    sequence(:day, (1..7).cycle) { |n| n }
+    service_week
 
     transient do
-      hours_count { 10 }
+      minimal { false }
+      hours_count { minimal ? 1 : 10 }
     end
 
     factory :service_day_with_hours do

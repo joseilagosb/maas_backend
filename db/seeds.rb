@@ -41,19 +41,24 @@ services = Array.new(5) do |index|
   p "Creando servicio #{index + 1}"
   service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}" })
 
-  (1..5).to_a.each do |working_day|
-    service.service_working_days.build({ 
-        day: working_day, 
-        from: service_hours[index][:weekdays].first, 
-        to: service_hours[index][:weekdays].last 
-    })
+  if !service_hours[index][:weekdays].empty?
+    (1..5).to_a.each do |working_day|
+      service.service_working_days.build({ 
+          day: working_day, 
+          from: service_hours[index][:weekdays].first, 
+          to: service_hours[index][:weekdays].last 
+      })
+    end
   end
-  (6..7).to_a.each do |working_day| 
-    service.service_working_days.build({ 
-        day: working_day, 
-        from: service_hours[index][:weekends].first, 
-        to: service_hours[index][:weekends].last 
-    })
+
+  if !service_hours[index][:weekends].empty?
+    (6..7).to_a.each do |working_day| 
+      service.service_working_days.build({ 
+          day: working_day, 
+          from: service_hours[index][:weekends].first, 
+          to: service_hours[index][:weekends].last 
+      })
+    end
   end
 
   current_week = Time.now.strftime("%U").to_i

@@ -15,5 +15,21 @@ RSpec.describe ServiceSerializer, type: :serializer do
     expect(serializer).to have_attribute(:active)
   end
 
-  pending 'serializes the relationships (figure out how to assess passing params)'
+  context 'with params[:method] = :show' do
+    let(:serializer_with_params) { described_class.new(service, params: { method: :show }) }
+
+    it 'serializes the relationships' do
+      expect(serializer_with_params).to have_many(:service_weeks)
+      expect(serializer_with_params).to have_many(:service_working_days)
+    end
+  end
+
+  context 'without params[:method] = :show' do
+    let(:serializer_without_params) { described_class.new(service) }
+
+    it 'does not serialize the relationships' do
+      expect(serializer_without_params).not_to have_many(:service_weeks)
+      expect(serializer_without_params).not_to have_many(:service_working_days)
+    end
+  end
 end

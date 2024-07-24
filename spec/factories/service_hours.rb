@@ -1,9 +1,9 @@
 FactoryBot.define do
   factory :service_hour do
     sequence(:id) { |n| n }
-    sequence(:hour) { |n| n % 24 }
+    sequence(:hour, (0..23).cycle) { |n| n }
     association :designated_user, factory: :user
-    association :service_day, factory: :service_day
+    service_day
 
     factory :service_hour_with_users do
       designated_user { User.all.sample || nil }

@@ -4,7 +4,7 @@ require 'matchers/serialized_equals'
 describe ServiceWeeksController do
   let(:admin) { create(:admin) }
   let(:users) { create_list(:fake_user, 3) }
-  let(:service_week) { create(:service_week_with_days_and_hours) }
+  let(:service_week) { create(:service_week_with_days_and_hours, minimal: true) }
 
   shared_examples 'access to service weeks' do
     describe 'GET #show' do

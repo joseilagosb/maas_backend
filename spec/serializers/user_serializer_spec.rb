@@ -14,5 +14,6 @@ RSpec.describe UserSerializer, type: :serializer do
     expect(serializer).to have_attribute(:name)
     expect(serializer).to have_attribute(:email)
     expect(serializer).to have_attribute(:role)
+    expect(serializer).to have_attribute(:color)
   end
 end

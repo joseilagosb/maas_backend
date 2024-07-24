@@ -5,8 +5,10 @@ class CreateServiceWorkingDays < ActiveRecord::Migration[7.1]
       t.integer :day
       t.integer :from
       t.integer :to
-
+      
       t.timestamps
+
+      t.index [:day, :service_id], name: "index_service_working_days_day_on_service_id"
     end
   end
 end

@@ -9,7 +9,7 @@ describe ServicesController do
   shared_examples 'user access to services' do
     describe 'GET #index' do
       it 'returns all services' do
-        services = create_list(:service_with_weeks_and_working_days, 3)
+        services = create_list(:service_with_weeks_and_working_days, 3, minimal: true)
         get :index, format: :json
         parsed_services = response.parsed_body
 

@@ -19,6 +19,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
     t.bigint "service_week_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["day", "service_week_id"], name: "index_service_days_day_on_service_week_id"
     t.index ["service_week_id"], name: "index_service_days_on_service_week_id"
   end
 
@@ -38,6 +39,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["designated_user_id"], name: "index_service_hours_on_designated_user_id"
+    t.index ["hour", "service_day_id"], name: "index_service_hours_hour_on_service_day_id"
     t.index ["service_day_id"], name: "index_service_hours_on_service_day_id"
   end
 
@@ -47,6 +49,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["service_id"], name: "index_service_weeks_on_service_id"
+    t.index ["week", "service_id"], name: "index_service_weeks_week_on_service_id"
   end
 
   create_table "service_working_days", force: :cascade do |t|
@@ -56,6 +59,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
     t.integer "to"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["day", "service_id"], name: "index_service_working_days_day_on_service_id"
     t.index ["service_id"], name: "index_service_working_days_on_service_id"
   end
 
@@ -64,6 +68,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_services_on_name", unique: true
   end
 
   create_table "users", force: :cascade do |t|
