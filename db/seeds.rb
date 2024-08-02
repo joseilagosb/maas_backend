@@ -69,7 +69,11 @@ services = Array.new(5) do |index|
   weeks = (starting_week..ending_week).to_a
   weeks.each do |week|
     service_week = service.service_weeks.build({ week: week })
-    days = (1..7).to_a
+    
+    days = []
+    days.concat (1..5).to_a unless service_hours[index][:weekdays].empty?
+    days.concat (6..7).to_a unless service_hours[index][:weekends].empty?
+    
     days.each do |day| 
       service_day = service_week.service_days.build({ day: day })
 

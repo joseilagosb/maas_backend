@@ -9,7 +9,7 @@ Rails.application.routes.draw do
                        sessions: 'users/sessions',
                        registrations: 'users/registrations'
                      }
-  get '/users', to: 'users#index'
+  get '/users/assigned_hours', to: 'users/assigned_hours#index'
 
   resources :services, only: %i[index show] do
     resources :service_weeks, only: %i[show edit]
