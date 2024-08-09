@@ -1,6 +1,6 @@
 class ServiceWeeksController < ApplicationController
   def show
-    service_week = ServiceWeek.includes(:service_days, service_days: { service_hours: [:designated_user] })
+    service_week = ServiceWeek.includes(service_days: { service_hours: [:designated_user] })
                               .find_by(service_id: params[:service_id], week: params[:id])
 
     render json: ServiceWeekSerializer.new(service_week, {
@@ -14,7 +14,7 @@ class ServiceWeeksController < ApplicationController
   end
 
   def edit
-    service_week = ServiceWeek.includes(:service_days, service_days: { service_hours: [:users] })
+    service_week = ServiceWeek.includes(service_days: { service_hours: [:users] })
                               .find_by(service_id: params[:service_id], week: params[:id])
     render json: ServiceWeekSerializer.new(service_week, {
                                              include: %i[

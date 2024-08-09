@@ -1,4 +1,4 @@
-class UserAssignedHoursQuery
+class UserHoursAssignmentsQuery
   attr_accessor :initial_scope, :options
 
   def initialize(initial_scope: User.all, options: {})

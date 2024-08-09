@@ -31,21 +31,27 @@ RSpec::Matchers.define :serialized_equals do |expected|
       # uno de sus atributos
       expect(data.length).to eq(expected.length)
       data.each_with_index do |element, element_index|
+        expected_element_json = expected[element_index].as_json
         element['attributes'].each_key do |key|
-          expect(element['attributes'][key]).to eq(expected[element_index][key])
+          next if key == 'id'
+
+          expect(element['attributes'][key]).to eq(expected_element_json[key])
         end
       end
     else
       # Expected es un solo elemento de ActiveRecord, se itera sobre los atributos del JSON
       data['attributes'].each do |key|
-        expect(data[key]).to eq(expected.attributes[key])
+        next if key == 'id'
+
+        expected_element_json = expected.as_json
+        expect(data[key]).to eq(expected_element_json[key])
       end
     end
 
     if actual.key?(:included)
       # Si tiene un atributo included, se trata de un serializable que incluye relaciones
 
-      # Extraemos primero las relaciones del objeto ActiveRecord (aquí se asume que fueron incluidos mediante 
+      # Extraemos primero las relaciones del objeto ActiveRecord (aquí se asume que fueron incluidos mediante
       # eager loading) y las comparamos con las relationships del JSON
       relationships = expected.class.reflections.map { |r| r.first.to_s }
       expect(relationships).to eq(actual[:data][:relationships].keys)
@@ -74,7 +80,10 @@ RSpec::Matchers.define :serialized_equals do |expected|
         included_elements.each do |included_element|
           expected_element = expected_elements.find_by(id: included_element['id'])
           included_element['attributes'].each do |attribute_key, attribute_value|
-            expect(attribute_value).to eq(expected_element.attributes[attribute_key])
+            next if attribute_key == 'id'
+
+            expected_element_json = expected_element.as_json
+            expect(attribute_value).to eq(expected_element_json[attribute_key])
           end
         end
       end
