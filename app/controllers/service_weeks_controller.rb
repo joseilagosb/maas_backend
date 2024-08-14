@@ -26,9 +26,15 @@ class ServiceWeeksController < ApplicationController
                                            }).serializable_hash, status: :ok
   end
 
+  def update
+    p update_params
+
+    render json: { error: 'Not implemented' }, status: :not_implemented
+  end
+
   private
 
-  def service_week_params
-    params.require(:service_week).permit(:id, :service_id, :week)
+  def update_params
+    params.require(:service_week).permit(:availability)
   end
 end

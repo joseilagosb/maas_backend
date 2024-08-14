@@ -12,6 +12,6 @@ Rails.application.routes.draw do
   get '/users/hours_assignments', to: 'users/hours_assignments#index'
 
   resources :services, only: %i[index show] do
-    resources :service_weeks, only: %i[show edit]
+    resources :service_weeks, only: %i[show edit update]
   end
 end

@@ -33,5 +33,28 @@ describe Users::HoursAssignmentsController do
         expect(parsed_hours_assignments).to serialized_equals([user_hours_assignment])
       end
     end
+
+    context 'with invalid params' do
+      context 'missing params' do
+        it 'returns a 400 bad request status code' do
+          get :index, params: { hours_assignment: {} }
+          expect(response).to have_http_status(:bad_request)
+        end
+      end
+
+      context 'missing service_id' do
+        it 'returns a 400 bad request status code' do
+          get :index, params: { hours_assignment: { service_id: nil, week: service_week.id } }
+          expect(response).to have_http_status(:bad_request)
+        end
+      end
+
+      context 'missing week' do
+        it 'returns a 400 bad request status code' do
+          get :index, params: { hours_assignment: { service_id: service.id, week: nil } }
+          expect(response).to have_http_status(:bad_request)
+        end
+      end
+    end
   end
 end

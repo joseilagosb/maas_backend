@@ -4,6 +4,8 @@ class UserHoursAssignmentsQuery
   def initialize(initial_scope: User.all, options: {})
     @initial_scope = initial_scope
     @options = options
+
+    validate_options!
   end
 
   def call
@@ -39,5 +41,13 @@ class UserHoursAssignmentsQuery
       GROUP BY
         u.id, sw.week, s.id
     SQL
+  end
+
+  def validate_options!
+    if options[:service_id].nil? || (options[:service_id].present? && !Service.exists?(options[:service_id]))
+      raise ArgumentError,
+            "invalid service_id: #{options[:service_id]}"
+    end
+    raise ArgumentError, "invalid week: #{options[:week]}" if options[:week].nil?
   end
 end
