@@ -1,5 +1,34 @@
 require 'faker'
 
+# Method to generate random availability intervals
+def random_availability_intervals
+  intervals = []
+  
+  # Decide if the user is unavailable on this day (e.g., 10% chance)
+  return intervals if rand < 0.1
+
+  # Start by assigning a larger interval
+  first_interval_start = rand(8..10)
+  first_interval_end = rand((first_interval_start + 4)..17)
+  intervals << (first_interval_start..first_interval_end)
+
+  # Potentially add a second interval if it doesn't overlap with the first
+  if rand < 0.7 # 70% chance of having a second interval
+    second_interval_start = rand((first_interval_end + 1)..19)
+    second_interval_end = rand([second_interval_start + 2, 22].min..22)
+    intervals << (second_interval_start..second_interval_end) unless first_interval_end >= second_interval_start
+  end
+
+  # If the intervals don't cover enough hours, extend one of them
+  total_hours_covered = intervals.sum { |interval| interval.size }
+  if total_hours_covered < 10 && rand < 0.5
+    intervals[0] = (first_interval_start..[first_interval_end + (10 - total_hours_covered), 22].min)
+  end
+
+  intervals
+end
+
+
 p 'Eliminando datos anteriores... (esto puede tomar unos segundos)'
 
 ServiceHourUser.delete_all
@@ -21,7 +50,7 @@ admins = User.create!([
   { name: "Pepe", email: "pepe@maas.com", password: 'contrasena_admin', role: :admin, color: :green },
 ])
 
-SERVICES_LENGTH = 5
+SERVICES_LENGTH = 3
 
 USERS_LENGTH = 3
 
@@ -31,13 +60,24 @@ service_hours = [
   { weekdays: (17..22).to_a, weekends: (12..23).to_a },
   { weekdays: (13..20).to_a, weekends: (10..20).to_a },
   { weekdays: (9..15).to_a, weekends: [] },
-  { weekdays: [], weekends: (12..23).to_a },
-  { weekdays: (9..18).to_a, weekends: [] },
 ]
+
+# Method to find available users for a given hour and day
+def available_users_for_hour(hour, day, user_availabilities)
+  user_availabilities.select do |user_id, availability|
+    intervals = availability[day]
+    intervals.any? { |interval| interval.include?(hour) } unless intervals.empty?
+  end.keys
+end
+
+
+################################################################################
+# SEEDS CODE STARTS HERE
+################################################################################
 
 p 'Creando servicios...'
 
-services = Array.new(5) do |index|
+services = Array.new(SERVICES_LENGTH) do |index|
   p "Creando servicio #{index + 1}"
   service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}" })
 
@@ -69,6 +109,13 @@ services = Array.new(5) do |index|
   weeks = (starting_week..ending_week).to_a
   weeks.each do |week|
     service_week = service.service_weeks.build({ week: week })
+
+    # Generate a unique schedule for each user
+    user_availabilities = {
+      users[0].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h,
+      users[1].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h,
+      users[2].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h
+    }
     
     days = []
     days.concat (1..5).to_a unless service_hours[index][:weekdays].empty?
@@ -77,33 +124,30 @@ services = Array.new(5) do |index|
     days.each do |day| 
       service_day = service_week.service_days.build({ day: day })
 
-      case day
-      when 1..5
-        service_hours[index][:weekdays].each do |hour|
-          designated_user_index = rand(0..(USERS_LENGTH - 1))
-          user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
-          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length)))
-          available_users_indexes << designated_user_index
+      hours = day <= 5 ? service_hours[index][:weekdays] : service_hours[index][:weekends]
 
-          service_hour = service_day.service_hours.build({ 
-            hour: hour, 
-            designated_user: users[designated_user_index],
-            users: users.values_at(*available_users_indexes)
-          })
-        end
-      else
-        service_hours[index][:weekends].each do |hour|
-          designated_user_index = rand(0..(USERS_LENGTH - 1))
-          user_indexes_except_designated = (0..(USERS_LENGTH - 1)).to_a - [designated_user_index]
-          available_users_indexes = user_indexes_except_designated.sample(rand(0..(user_indexes_except_designated.length)))
-          available_users_indexes << designated_user_index
+      hours.each do |hour|
+        available_user_ids = available_users_for_hour(hour, day, user_availabilities)
 
-          service_hour = service_day.service_hours.build({ 
-            hour: hour, 
-            designated_user: users[designated_user_index],
-            users: users.values_at(*available_users_indexes)
-          })
+        if available_user_ids.any?
+          # Get a random user ID from the available user IDs
+          random_user_id = available_user_ids.sample
+          
+          # Find the user instance corresponding to that ID
+          designated_user = users.find { |u| u.id == random_user_id }
+          
+          # Ensure that available_users includes the designated user and any other users
+          available_users = users.select { |u| available_user_ids.include?(u.id) }
+        else
+          designated_user = nil
+          available_users = []
         end
+    
+        service_hour = service_day.service_hours.build({ 
+          hour: hour, 
+          designated_user: designated_user,
+          users: available_users
+        })
       end
     end
   end

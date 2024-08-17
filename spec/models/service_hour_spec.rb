@@ -34,4 +34,12 @@ RSpec.describe ServiceHour, type: :model do
       expect(service_hour_with_duplicate_hour).to_not be_valid
     end
   end
+
+  context 'designated_user validation' do
+    it 'is valid when designated_user is null' do
+      service_hour = build(:service_hour, designated_user: nil)
+      service_hour.valid?
+      expect(service_hour).to be_valid
+    end
+  end
 end
