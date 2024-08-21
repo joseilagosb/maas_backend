@@ -27,7 +27,10 @@ class ServiceWeeksController < ApplicationController
   end
 
   def update
-    p update_params
+    parsed_availability = JSON.parse(update_params[:availability])
+    ShiftSchedulerService.new(params[:service_id],
+                              parsed_availability,
+                              params[:id]).call
 
     render json: { error: 'Not implemented' }, status: :not_implemented
   end
@@ -35,6 +38,6 @@ class ServiceWeeksController < ApplicationController
   private
 
   def update_params
-    params.require(:service_week).permit(:availability)
+    params.require(:service_week).permit(:service_id, :availability, :week)
   end
 end

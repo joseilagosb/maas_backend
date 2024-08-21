@@ -1,7 +1,6 @@
 require 'faker'
 
-# Method to generate random availability intervals
-def random_availability_intervals
+def random_availability_intervals__OLD
   intervals = []
   
   # Decide if the user is unavailable on this day (e.g., 10% chance)
@@ -28,6 +27,57 @@ def random_availability_intervals
   intervals
 end
 
+# Method to generate random availability intervals
+def random_availability_intervals(hours)
+  # If there are no hours (it's not a working day), return an empty array
+  return [] if hours.empty?
+
+  # Decide if the user is unavailable on this day (10% chance)
+  return [] if rand < 0.1
+
+  day_start = hours.first
+  day_end = hours.last
+  intervals = []
+
+  # Start by assigning a larger interval
+  position = 'up'
+  if rand < 0.5
+    first_interval_start = rand(day_start..day_start + 2)
+    first_interval_end = rand(day_end - (hours.size / 2)..day_end)
+  else
+    position = 'down'
+    first_interval_end = rand(day_end - 2..day_end)
+    first_interval_start = rand(day_start..day_start + (hours.size / 2))
+  end
+
+  remaining_hours = hours.size - first_interval_end - first_interval_start + 1
+
+  # If there are too few unavailable hours, assign the whole day instead
+  if remaining_hours < 3 && (rand < 0.3 && hours.size < 10) && (rand < 0.6 && hours.size >= 10)
+    return [(day_start..day_end)]
+  end
+
+  # If the interval is too small, we extend it to the left and right (if possible)
+  if first_interval_end - first_interval_start + 1 < 3
+    extra_hours = 0
+
+    while extra_hours < 2 && (first_interval_start > day_start && first_interval_end < day_end)
+      if first_interval_start > day_start
+        first_interval_start -= 1
+        extra_hours += 1
+      end
+      if first_interval_end < day_end
+        first_interval_end += 1
+        extra_hours += 1
+      end
+    end
+  end
+
+  intervals << (first_interval_start..first_interval_end)
+
+  intervals
+end
+
 
 p 'Eliminando datos anteriores... (esto puede tomar unos segundos)'
 
@@ -50,7 +100,7 @@ admins = User.create!([
   { name: "Pepe", email: "pepe@maas.com", password: 'contrasena_admin', role: :admin, color: :green },
 ])
 
-SERVICES_LENGTH = 3
+SERVICES_LENGTH = 1
 
 USERS_LENGTH = 3
 
@@ -66,6 +116,7 @@ service_hours = [
 def available_users_for_hour(hour, day, user_availabilities)
   user_availabilities.select do |user_id, availability|
     intervals = availability[day]
+    p "availability: #{availability}, user_id: #{user_id}, day: #{day}, intervals: #{intervals}, hour: #{hour}"
     intervals.any? { |interval| interval.include?(hour) } unless intervals.empty?
   end.keys
 end
@@ -111,11 +162,27 @@ services = Array.new(SERVICES_LENGTH) do |index|
     service_week = service.service_weeks.build({ week: week })
 
     # Generate a unique schedule for each user
-    user_availabilities = {
-      users[0].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h,
-      users[1].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h,
-      users[2].id => (1..7).map { |day| [day, random_availability_intervals] }.to_h
-    }
+    user_availabilities = users.each.map do |user|
+      availability = (1..7).map do |day|
+        hours = if (1..5).include?(day)
+                  service_hours[index][:weekdays]
+                else
+                  service_hours[index][:weekends]
+                end
+        [day, random_availability_intervals(hours)]
+      end.to_h
+      [user.id, availability]
+    end.to_h
+
+    # p user_availabilities
+
+    # user_availabilities = {
+    #   users[0].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h,
+    #   users[1].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h,
+    #   users[2].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h
+    # }
+
+    # p user_availabilities
     
     days = []
     days.concat (1..5).to_a unless service_hours[index][:weekdays].empty?
@@ -127,7 +194,10 @@ services = Array.new(SERVICES_LENGTH) do |index|
       hours = day <= 5 ? service_hours[index][:weekdays] : service_hours[index][:weekends]
 
       hours.each do |hour|
+        p "----------------"
         available_user_ids = available_users_for_hour(hour, day, user_availabilities)
+        p available_user_ids
+        p "----------------"
 
         if available_user_ids.any?
           # Get a random user ID from the available user IDs
