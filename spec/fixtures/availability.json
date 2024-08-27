@@ -1,0 +1,69 @@
+{
+  "base": {
+    "serviceDays": [
+      {
+        "day": "1",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": true, "102": false } },
+          { "hour": 9, "available": { "101": true, "102": true } },
+          { "hour": 10, "available": { "101": false, "102": true } }
+        ]
+      },
+      {
+        "day": "2",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": true, "102": true } },
+          { "hour": 9, "available": { "101": false, "102": true } },
+          { "hour": 10, "available": { "101": false, "102": true } }
+        ]
+      }
+    ]
+  },
+  "with_unavailable_user": {
+    "serviceDays": [
+      {
+        "day": "1",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": false, "102": false } },
+          { "hour": 9, "available": { "101": false, "102": true } },
+          { "hour": 10, "available": { "101": false, "102": true } }
+        ]
+      },
+      {
+        "day": "2",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": true, "102": true } },
+          { "hour": 9, "available": { "101": true, "102": true } },
+          { "hour": 10, "available": { "101": true, "102": true } }
+        ]
+      }
+    ]
+  },
+  "with_two_intervals_in_a_day": {
+    "serviceDays": [
+      {
+        "day": "1",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": true } },
+          { "hour": 9, "available": { "101": true } },
+          { "hour": 10, "available": { "101": false } },
+          { "hour": 11, "available": { "101": false } },
+          { "hour": 12, "available": { "101": true } },
+          { "hour": 13, "available": { "101": true } }
+        ]
+      }
+    ]
+  },
+  "empty": {
+    "serviceDays": [
+      {
+        "day": "1",
+        "serviceHours": [
+          { "hour": 8, "available": { "101": false, "102": false } },
+          { "hour": 9, "available": { "101": false, "102": false } },
+          { "hour": 10, "available": { "101": false, "102": false } }
+        ]
+      }
+    ]
+  }
+}
