@@ -65,6 +65,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_13_211704) do
 
   create_table "services", force: :cascade do |t|
     t.string "name"
+    t.string "description"
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

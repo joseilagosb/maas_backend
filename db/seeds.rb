@@ -100,11 +100,26 @@ admins = User.create!([
   { name: "Pepe", email: "pepe@maas.com", password: 'contrasena_admin', role: :admin, color: :green },
 ])
 
-SERVICES_LENGTH = 1
+SERVICES_LENGTH = 3
 
 USERS_LENGTH = 3
 
 service_type = ["mobile", "analytics", "web", "api", "financial"]
+
+service_descriptions = [
+  "Plataforma colaborativa para la planificación, ejecución y seguimiento de proyectos, con herramientas de gestión de tareas, tiempos y recursos.",
+  "Servicio avanzado de análisis y visualización de datos, que permite a las empresas obtener insights clave a partir de grandes volúmenes de información.",
+  "Solución completa para tiendas en línea, con integración de pasarelas de pago, gestión de inventarios y personalización de la experiencia de compra.",
+  "Plataforma que permite automatizar campañas de marketing por correo electrónico, redes sociales y más, optimizando el alcance y la conversión de clientes.",
+  "Sistema integral para la administración de recursos humanos, incluyendo el seguimiento de nóminas, vacaciones y evaluaciones de desempeño.",
+  "Aplicación de gestión de inventarios que permite a las empresas rastrear y administrar sus existencias en tiempo real, optimizando la cadena de suministro.",
+  "Plataforma de gestión de clientes (CRM) que ayuda a las empresas a gestionar interacciones con clientes y prospectos, mejorando la retención y satisfacción del cliente.",
+  "Sistema de reservas en línea que permite a negocios de diferentes sectores gestionar y automatizar la programación de citas y reservas de servicios.",
+  "Servicio de desarrollo de aplicaciones móviles personalizadas que ofrece soluciones a medida para iOS y Android, mejorando la experiencia del usuario en dispositivos móviles.",
+  "Herramienta de colaboración en línea que integra funciones de chat, videoconferencia y compartición de documentos para facilitar el trabajo en equipo y la comunicación remota."
+]
+
+selected_service_descriptions = service_descriptions.sample(SERVICES_LENGTH)
 
 service_hours = [
   { weekdays: (17..22).to_a, weekends: (12..23).to_a },
@@ -116,7 +131,6 @@ service_hours = [
 def available_users_for_hour(hour, day, user_availabilities)
   user_availabilities.select do |user_id, availability|
     intervals = availability[day]
-    p "availability: #{availability}, user_id: #{user_id}, day: #{day}, intervals: #{intervals}, hour: #{hour}"
     intervals.any? { |interval| interval.include?(hour) } unless intervals.empty?
   end.keys
 end
@@ -130,7 +144,7 @@ p 'Creando servicios...'
 
 services = Array.new(SERVICES_LENGTH) do |index|
   p "Creando servicio #{index + 1}"
-  service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}" })
+  service = Service.new({ name: "#{Faker::App.name} #{service_type.sample}", description: selected_service_descriptions[index] })
 
   if !service_hours[index][:weekdays].empty?
     (1..5).to_a.each do |working_day|
@@ -173,16 +187,6 @@ services = Array.new(SERVICES_LENGTH) do |index|
       end.to_h
       [user.id, availability]
     end.to_h
-
-    # p user_availabilities
-
-    # user_availabilities = {
-    #   users[0].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h,
-    #   users[1].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h,
-    #   users[2].id => (1..7).map { |day| [day, random_availability_intervals__OLD] }.to_h
-    # }
-
-    # p user_availabilities
     
     days = []
     days.concat (1..5).to_a unless service_hours[index][:weekdays].empty?
@@ -194,10 +198,7 @@ services = Array.new(SERVICES_LENGTH) do |index|
       hours = day <= 5 ? service_hours[index][:weekdays] : service_hours[index][:weekends]
 
       hours.each do |hour|
-        p "----------------"
         available_user_ids = available_users_for_hour(hour, day, user_availabilities)
-        p available_user_ids
-        p "----------------"
 
         if available_user_ids.any?
           # Get a random user ID from the available user IDs
