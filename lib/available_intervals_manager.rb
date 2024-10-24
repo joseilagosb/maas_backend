@@ -1,5 +1,5 @@
-class IntervalManager
-  def self.build_intervals(availability)
+class AvailableIntervalsManager
+  def self.build(availability)
     new(availability).to_intervals
   end
 
@@ -17,7 +17,7 @@ class IntervalManager
         process_hour(hour, intervals_by_user, prev_available)
         prev_available = hour['available']
       end
-      result[day['day']] = intervals_by_user
+      result[day['day']] = intervals_by_user.transform_values(&:shuffle)
     end
   end
 
