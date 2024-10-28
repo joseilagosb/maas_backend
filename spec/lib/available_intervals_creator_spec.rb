@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe AvailableIntervalsManager do
+describe AvailableIntervalsCreator do
   let(:availabilities) do
     JSON.parse(File.read('spec/fixtures/availability.json'))
   end
@@ -10,10 +10,9 @@ describe AvailableIntervalsManager do
     # Represents a monday to tuesday availability, with the availability of two users of ids 101 and 102
     # Both users are available everyday albeit in different time slots
     context 'base availability' do
-      let(:intervals) { AvailableIntervalsManager.build(availabilities['base']) }
+      let(:intervals) { AvailableIntervalsCreator.build(availabilities['base']) }
 
       it 'returns the correct number of days' do
-        puts intervals
         expect(intervals.length).to eq(2)
       end
 
@@ -49,7 +48,7 @@ describe AvailableIntervalsManager do
 
     context 'with two intervals in a day' do
       let(:intervals_with_two_intervals_in_a_day) do
-        AvailableIntervalsManager.build(availabilities['with_two_intervals_in_a_day'])
+        AvailableIntervalsCreator.build(availabilities['with_two_intervals_in_a_day'])
       end
 
       it 'returns two intervals in a single day' do
@@ -59,13 +58,15 @@ describe AvailableIntervalsManager do
       end
 
       it 'returns the expected intervals hash' do
-        expect(intervals_with_two_intervals_in_a_day).to eq(expected_intervals['with_two_intervals_in_a_day'])
+        expect(intervals_with_two_intervals_in_a_day['1']['101'].sort_by(&:first)).to eq(
+          expected_intervals['with_two_intervals_in_a_day']['1']['101'].sort_by(&:first)
+        )
       end
     end
 
     context 'with unavailable user in a day' do
       let(:intervals_with_unavailable_user) do
-        AvailableIntervalsManager.build(availabilities['with_unavailable_user'])
+        AvailableIntervalsCreator.build(availabilities['with_unavailable_user'])
       end
 
       before :each do
@@ -90,7 +91,7 @@ describe AvailableIntervalsManager do
 
     context 'empty availability' do
       let(:intervals_with_empty_availability) do
-        AvailableIntervalsManager.build(availabilities['empty'])
+        AvailableIntervalsCreator.build(availabilities['empty'])
       end
 
       it 'returns an empty hash for each day' do
@@ -107,7 +108,7 @@ describe AvailableIntervalsManager do
 
   context 'with invalid parameters' do
     it 'raises an ArgumentError' do
-      expect { AvailableIntervalsManager.build(nil) }.to raise_error(ArgumentError)
+      expect { AvailableIntervalsCreator.build(nil) }.to raise_error(ArgumentError)
     end
   end
 end

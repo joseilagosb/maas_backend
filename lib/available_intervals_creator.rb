@@ -1,4 +1,4 @@
-class AvailableIntervalsManager
+class AvailableIntervalsCreator
   def self.build(availability)
     new(availability).to_intervals
   end
