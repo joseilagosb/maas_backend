@@ -46,6 +46,24 @@ class IntervalsManager
     availability[day][user].shuffle!
   end
 
+  def self.remainder_between_intervals(bigger_interval, smaller_interval)
+    return [] if bigger_interval == smaller_interval
+    return [bigger_interval] unless interval_overlap_or_adjacent?(bigger_interval, smaller_interval)
+
+    # the remainder is in the right bound of the bigger interval
+    if smaller_interval[0] <= bigger_interval[0]
+      [smaller_interval[1] + 1, bigger_interval[1]]
+    # the remainder is in the left bound of the bigger interval
+    elsif smaller_interval[1] >= bigger_interval[1]
+      [bigger_interval[0], smaller_interval[0] - 1]
+    else
+      # the smaller interval is in the middle, so the difference are two intervals in the left and right bounds of
+      # the interval
+      [[bigger_interval[0], smaller_interval[0] - 1],
+       [smaller_interval[1] + 1, bigger_interval[1]]]
+    end
+  end
+
   def self.interval_overlap_or_adjacent?(interval1, interval2)
     interval1[1] >= interval2[0] - 1 && interval2[1] >= interval1[0] - 1
   end

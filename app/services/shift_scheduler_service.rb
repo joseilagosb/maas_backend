@@ -1,6 +1,4 @@
 class ShiftSchedulerService
-  attr_reader :availability_hash, :shifts, :remaining_hours, :remaining_hours_by_user, :hours_by_user
-
   def initialize(availability_hash, service_id, week)
     @availability = AvailableIntervalsCreator.build(availability_hash)
     initialize_data(service_id, week)
@@ -61,23 +59,31 @@ class ShiftSchedulerService
     @shifts.each do |day, hours|
       remaining_intervals = @availability[day] || {}
       empty_hours = hours.select { |_hour, user| user.nil? }.keys
-      number_of_occupied_hours = hours.length - empty_hours.length
+
+      next if empty_hours.empty?
 
       # We look for the best interval to fit the remaining hours in the day
-      selected_interval, selected_user = BestIntervalFinder.build(remaining_hours_by_user, empty_hours,
+      selected_interval, selected_user = BestIntervalFinder.build(@remaining_hours_by_user, empty_hours,
                                                                   remaining_intervals)
 
-      next if selected_interval.nil? || (selected_interval[0].blank? && selected_interval[1].blank?)
+      next if selected_interval.blank?
 
       # we remove the selected interval since it's going to be added
       selected_interval = IntervalsManager.remove_interval(@availability, day, selected_user, selected_interval)
 
       # we adjust the start and end boundaries of the interval to fit in the shifts hash
       # and maintain balance with the existing user
-      adjusted_interval = IntervalBoundariesAdjuster.build(hours, number_of_occupied_hours, selected_interval)
+      adjusted_interval = IntervalBoundariesAdjuster.build(hours, selected_interval)
 
       # we finally add the adjusted interval to the shifts hash
       assign_user_to_hours_interval(selected_user, day, adjusted_interval)
+
+      remainder_interval = IntervalsManager.remainder_between_intervals(selected_interval, adjusted_interval)
+      # and add the extracted portion back to the shifts hash
+      if remainder_interval.present?
+        IntervalsManager.add_interval(@availability, day, selected_user,
+                                      remainder_interval)
+      end
     end
   end
 

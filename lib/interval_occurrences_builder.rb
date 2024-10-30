@@ -2,8 +2,6 @@ class IntervalOccurrencesBuilder
   attr_reader :empty_hours, :remaining_intervals
 
   def self.build(empty_hours, remaining_intervals)
-    puts 'empty hours', empty_hours
-    puts 'remaining intervals', remaining_intervals
     new(empty_hours, remaining_intervals).call
   end
 
