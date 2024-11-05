@@ -14,6 +14,8 @@ class IntervalBoundariesAdjuster
   end
 
   def initialize(hours, interval)
+    # puts "#{hours}, #{interval}"
+
     raise ArgumentError, 'invalid hours' unless hours.is_a?(Hash)
     raise ArgumentError, 'invalid interval' unless interval.is_a?(Array) && interval.length == 2
 
@@ -24,10 +26,14 @@ class IntervalBoundariesAdjuster
   def adjust
     # first we detect the empty regions in the hours hash
     empty_ranges = find_empty_ranges
-    return @interval if empty_ranges.empty?
 
     # then we choose the best empty range (either at the left or right side of the interval)
-    best_range = choose_best_range(empty_ranges)
+    best_range = if empty_ranges.blank?
+                   @interval
+                 else
+                   choose_best_range(empty_ranges)
+                 end
+
     return @interval if best_range.nil?
 
     adjust_range(best_range)
@@ -71,6 +77,8 @@ class IntervalBoundariesAdjuster
     # we establish a minimum of 3 hours just so we don't end up with a very small interval
     target_length = [(number_of_occupied_hours / 2.0).ceil, 3].max
 
+    # puts target_length
+
     if best_range[0] == @interval[0]
       # if starting from the beginning, we take first half
       adjusted_end = best_range[0] + target_length - 1
@@ -89,7 +97,16 @@ class IntervalBoundariesAdjuster
   # we check whether there are remaining null hours in what remained of the original interval
   # and if so, we expand the interval to include those null hours
   def expand_interval_if_necessary(adjusted_interval, side)
-    remainder_interval = IntervalsManager.remainder_between_intervals(@interval, adjusted_interval)
+    # puts "selected interval: #{@interval}"
+
+    # puts "discarded nulls interval: #{discarded_nulls_interval(side)}"
+
+    remainder_interval = IntervalsManager.remainder_between_intervals_compact(
+      discarded_nulls_interval(side),
+      adjusted_interval
+    )
+
+    # puts "remainder interval: #{remainder_interval}"
 
     remaining_nulls = if remainder_interval.blank?
                         0
@@ -99,6 +116,8 @@ class IntervalBoundariesAdjuster
                         end.length
                       end
 
+    # puts "adjusted interval: #{adjusted_interval}, remaining nulls: #{remaining_nulls}"
+
     if side == :start
       adjusted_interval[1] += remaining_nulls
     else
@@ -106,5 +125,19 @@ class IntervalBoundariesAdjuster
     end
 
     adjusted_interval
+  end
+
+  # discards leading or trailing nulls from an interval
+  def discarded_nulls_interval(side)
+    resulting_interval = @interval.dup
+
+    if side == :start
+      resulting_interval[1] = (@interval[0]..@interval[1]).reverse_each.find { |hour| @hours[hour].present? }
+      resulting_interval[1] = @interval[1] if resulting_interval[1].nil?
+    else
+      resulting_interval[0] = (@interval[0]..@interval[1]).find { |hour| @hours[hour].present? }
+      resulting_interval[0] = @interval[0] if resulting_interval[0].nil?
+    end
+    resulting_interval
   end
 end

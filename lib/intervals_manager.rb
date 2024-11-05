@@ -47,21 +47,31 @@ class IntervalsManager
   end
 
   def self.remainder_between_intervals(bigger_interval, smaller_interval)
-    return [] if bigger_interval == smaller_interval
-    return [bigger_interval] unless interval_overlap_or_adjacent?(bigger_interval, smaller_interval)
+    return [nil, :equal] if bigger_interval == smaller_interval
+    return [bigger_interval, :overlap_or_adjacent] unless interval_overlap_or_adjacent?(
+      bigger_interval, smaller_interval
+    )
 
     # the remainder is in the right bound of the bigger interval
     if smaller_interval[0] <= bigger_interval[0]
-      [smaller_interval[1] + 1, bigger_interval[1]]
+      [[smaller_interval[1] + 1, bigger_interval[1]], :right]
     # the remainder is in the left bound of the bigger interval
     elsif smaller_interval[1] >= bigger_interval[1]
-      [bigger_interval[0], smaller_interval[0] - 1]
+      [[bigger_interval[0], smaller_interval[0] - 1], :left]
     else
       # the smaller interval is in the middle, so the difference are two intervals in the left and right bounds of
       # the interval
-      [[bigger_interval[0], smaller_interval[0] - 1],
-       [smaller_interval[1] + 1, bigger_interval[1]]]
+      [[[bigger_interval[0], smaller_interval[0] - 1],
+        [smaller_interval[1] + 1, bigger_interval[1]]], :both]
     end
+  end
+
+  def self.remainder_between_intervals_compact(bigger_interval, smaller_interval)
+    result = remainder_between_intervals(bigger_interval, smaller_interval)
+
+    return nil if result[1] == :equal
+
+    result[0]
   end
 
   def self.interval_overlap_or_adjacent?(interval1, interval2)

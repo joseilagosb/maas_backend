@@ -35,7 +35,7 @@ describe IntervalBoundariesAdjuster do
 
         adjusted_interval = IntervalBoundariesAdjuster.build(@hours, @selected_interval)
 
-        expect(adjusted_interval).to eq([17, 20])
+        expect(adjusted_interval).to eq([18, 20])
       end
 
       it 'case 5' do
@@ -56,6 +56,36 @@ describe IntervalBoundariesAdjuster do
         adjusted_interval = IntervalBoundariesAdjuster.build(@hours, @selected_interval)
 
         expect(adjusted_interval).to eq([16, 20])
+      end
+
+      it 'case 7' do
+        @hours = { 10 => '2', 11 => '2', 12 => '2', 13 => '2', 14 => '2', 15 => '2' }
+        @selected_interval = [10, 15]
+
+        adjusted_interval = IntervalBoundariesAdjuster.build(@hours, @selected_interval)
+
+        expect(adjusted_interval).to eq([10, 12])
+      end
+
+      # case 8: the selected interval covers the occupied region (nils left and right)
+      it 'case 8' do
+        @hours = { 9 => nil, 10 => nil, 11 => '2', 12 => '2', 13 => '2', 14 => nil, 15 => nil }
+        @selected_interval = [9, 14]
+
+        adjusted_interval = IntervalBoundariesAdjuster.build(@hours, @selected_interval)
+
+        expect(adjusted_interval).to eq([9, 11])
+      end
+
+      # case: selected interval is adjacent to the occupied region
+      it 'case 9' do
+        @hours = { 10 => nil, 11 => nil, 12 => nil, 13 => nil, 14 => nil, 15 => nil, 16 => nil, 17 => '1', 18 => '1',
+                   19 => '1', 20 => '1' }
+        @selected_interval = [11, 16]
+
+        adjusted_interval = IntervalBoundariesAdjuster.build(@hours, @selected_interval)
+
+        expect(adjusted_interval).to eq([11, 16])
       end
     end
   end

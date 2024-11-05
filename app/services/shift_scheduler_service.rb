@@ -2,12 +2,15 @@ class ShiftSchedulerService
   def initialize(availability_hash, service_id, week)
     @availability = AvailableIntervalsCreator.build(availability_hash)
     initialize_data(service_id, week)
+    @options = { max_finetuning_iterations: 3 }
   end
 
   def call
     filling_round
     merging_round
     finetuning_round
+    Logging::ShiftSchedulerLogger.call(@shifts, @remaining_hours_by_user, @hours_by_user, @remaining_hours,
+                                       @availability, 'Final shifts distribution')
   end
 
   private
@@ -78,7 +81,8 @@ class ShiftSchedulerService
       # we finally add the adjusted interval to the shifts hash
       assign_user_to_hours_interval(selected_user, day, adjusted_interval)
 
-      remainder_interval = IntervalsManager.remainder_between_intervals(selected_interval, adjusted_interval)
+      remainder_interval = IntervalsManager.remainder_between_intervals_compact(selected_interval, adjusted_interval)
+
       # and add the extracted portion back to the shifts hash
       if remainder_interval.present?
         IntervalsManager.add_interval(@availability, day, selected_user,
@@ -96,7 +100,39 @@ class ShiftSchedulerService
     Logging::ShiftSchedulerLogger.call(@shifts, @remaining_hours_by_user, @hours_by_user, @remaining_hours,
                                        @availability, 'Initial shifts distribution (third round)')
 
-    # to be implemented
+    iterations = 0
+
+    # TODO: figure out a way to stop the algorithm if it's not going to improve the shifts distribution
+    while @options[:max_finetuning_iterations] > iterations && unbalanced_users.present?
+      sorted_users = users_by_remaining_hours
+
+      user_to_remove = sorted_users.last
+      user_to_add = sorted_users.first
+
+      required_hours_to_remove = @remaining_hours_by_user[user_to_remove].abs
+
+      break if required_hours_to_remove < 3
+
+      puts "shifts: #{@shifts}, user remaining intervals: #{user_remaining_intervals(user_to_add)}, user_to_add: #{user_to_add}, user_to_remove: #{user_to_remove}, required_hours_to_remove: #{@remaining_hours_by_user[user_to_remove].abs}"
+
+      # - the candidate/user_to_remove needs a certain amount of hours to be removed from the shifts hash
+      # to regain balance
+      # - the user/user_to_add needs to be added to the shifts hash
+      resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts,
+                                                                          user_remaining_intervals(user_to_add),
+                                                                          user_to_add,
+                                                                          user_to_remove,
+                                                                          @remaining_hours_by_user[user_to_remove].abs)
+
+      puts "resulting days: #{resulting_days}", "resulting intervals: #{resulting_intervals}"
+
+      resulting_days.each_with_index do |day, index|
+        IntervalsManager.remove_interval(@availability, day, user_to_add, resulting_intervals[index])
+        assign_user_to_hours_interval(user_to_add, day, resulting_intervals[index])
+      end
+
+      iterations += 1
+    end
   end
 
   def assign_user_to_hours_interval(user, day, hours_interval)
@@ -115,6 +151,19 @@ class ShiftSchedulerService
       # we add the user back to the availability hash if there was a previous user in the shifts hash
       IntervalsManager.add_interval(@availability, day, previous_user, [hour, hour]) if previous_user
     end
+  end
+
+  def unbalanced_users
+    @remaining_hours_by_user.select { |_user, hours| hours.negative? }.keys
+  end
+
+  def users_by_remaining_hours
+    @remaining_hours_by_user.sort_by { |_user, hours| hours }.reverse.map(&:first)
+  end
+
+  def user_remaining_intervals(user_id)
+    @availability.select { |_day, hours| hours.key?(user_id) }
+                 .reduce({}) { |result, (day, hours)| result.merge(day => hours[user_id]) }
   end
 
   def initialize_data(service_id, week)
