@@ -1,3 +1,8 @@
+# Finds the best candidate interval to balance the shifts hash's assigned hours by user. It does so by:
+# - Finding the best interval to replace the removed user's hours
+# - Adjusting the best interval to fit both the user to add and the user to remove in equal proportions (or close to it)
+
+# The result of this is an interval to be promptly added to the shifts hash.
 class ShiftsFinetuningManager
   def self.build(shifts, user_remaining_intervals, user_to_add, user_to_remove, required_hours_to_remove)
     new(shifts, user_remaining_intervals, user_to_add, user_to_remove, required_hours_to_remove).call
@@ -12,7 +17,6 @@ class ShiftsFinetuningManager
   end
 
   def call
-    puts '---------------------- call ----------------------'
     selected_days = []
     selected_intervals = []
     used_days = Set.new
@@ -22,11 +26,13 @@ class ShiftsFinetuningManager
       day, interval = find_best_interval(used_days)
       break unless day && interval
 
-      interval_hours = interval[1] - interval[0] + 1
+      adjusted_interval = adjust_best_interval(day, interval)
+
+      interval_hours = adjusted_interval[1] - adjusted_interval[0] + 1
       @remaining_hours -= interval_hours
 
       selected_days << day
-      selected_intervals << interval
+      selected_intervals << adjusted_interval
       used_days.add(day)
     end
 
@@ -35,10 +41,9 @@ class ShiftsFinetuningManager
 
   private
 
+  # finds among the user remaining intervals the one that's the best fit to replace a occupied hour block
   def find_best_interval(used_days)
-    puts '---------- find_best_interval ------------'
     best_day = nil
-    current_user_occupied_interval = nil
     best_interval = nil
     max_score = -1
 
@@ -48,104 +53,103 @@ class ShiftsFinetuningManager
 
       # we look for the hour sequences occupied by the user to remove
       user_occupied_interval = find_user_occupied_interval(hours, @user_to_remove)
+      next if user_occupied_interval.nil? || user_occupied_interval[1] - user_occupied_interval[0] + 1 <= 3
 
-      next if user_occupied_interval.nil?
-
-      next if user_occupied_interval[1] - user_occupied_interval[0] + 1 <= 3
-
-      @user_remaining_intervals[day].each do |available_interval|
-        score = evaluate_sequence(user_occupied_interval, available_interval)
-
+      @user_remaining_intervals[day].each do |candidate_interval|
+        # we discard the hour blocks occupied by more than one user that are too short to add an extra one
         next if multiple_user_hours?(hours) && hours.values.compact.count <= 7
 
+        score = evaluate_interval(user_occupied_interval, candidate_interval)
         next unless score > max_score
 
         max_score = score
         best_day = day
-
-        current_user_occupied_interval = user_occupied_interval
-
-        best_interval = available_interval
+        best_interval = candidate_interval
       end
     end
 
-    return [nil, nil] if best_interval.nil?
+    [best_day, best_interval]
+  end
 
-    user_hours = @shifts[best_day].dup.select do |hour, user|
-      user == @user_to_remove.to_s && hour
-    end
+  # adjusts the chosen best interval to fit and fulfill the constraints of the shifts hash
+  def adjust_best_interval(best_day, best_interval)
+    remainder_intervals, orientation = IntervalsManager.remainder_between_intervals(
+      find_user_occupied_interval(@shifts[best_day], @user_to_remove),
+      best_interval
+    )
 
-    remainder_intervals, orientation = IntervalsManager.remainder_between_intervals(current_user_occupied_interval,
-                                                                                    best_interval)
+    # if there's no remainder interval, it's a perfect adjustment, no need to change it
+    return best_interval unless must_adjust_interval?(best_interval, orientation)
 
-    must_adjust_interval = false
+    # we fit the interval in the user's occupied hours space
+    user_hours = user_hours_for_adjustment(best_day, remainder_intervals, orientation)
+    best_interval = [[best_interval[0], user_hours.keys.first].max,
+                     [best_interval[1], user_hours.keys.last].min]
 
-    puts " user hours: #{user_hours}, best sequence: #{current_user_occupied_interval},
-    best interval: #{best_interval}, remainder intervals: #{remainder_intervals}, orientation: #{orientation}"
+    # we adjust the best interval so that it uses half of the user to remove's hours                    
+    adjusted_interval = IntervalBoundariesAdjuster.build(user_hours, best_interval)
 
-    unless %i[equal overlap_or_adjacent].include?(orientation)
-      if orientation == :left
-        remainder_interval = remainder_intervals
-        if remainder_interval[1] - remainder_interval[0] + 1 <= 2
-          user_hours[user_hours.keys.last] = nil
-          must_adjust_interval = true
-        end
-      elsif orientation == :right
-        remainder_interval = remainder_intervals
-        if remainder_interval[1] - remainder_interval[0] + 1 <= 2
-          user_hours[user_hours.keys.first] = nil
-          must_adjust_interval = true
-        end
-      elsif orientation == :both
-        left_interval, right_interval = remainder_intervals
-        puts 'AAAA ignore this sneaky case'
+    # finally we check if the adjusted interval will leave a small hour block for the user to remove
+    remainder_interval = IntervalsManager.remainder_between_intervals_compact(
+      find_user_occupied_interval(@shifts[best_day], @user_to_remove),
+      adjusted_interval
+    )
+    return adjusted_interval if remainder_interval.blank?
+
+    # selects the second interval (the right one) as it will assume a left shift
+    remainder_interval = remainder_interval[1] if remainder_interval[1].is_a?(Array)
+
+    shift_adjusted_interval(best_day, adjusted_interval, remainder_interval, orientation)
+  end
+
+  def must_adjust_interval?(best_interval, remainder_orientation)
+    %i[left right both].include?(remainder_orientation) ||
+      best_interval[1] - best_interval[0] > @remaining_hours
+  end
+
+  # (This is a little hacky)
+  # Sets an hour to nil in the user hours portion depending on the orientation of the remainder interval.
+  # By doing this, we force an adjustment in a specific position when calling IntervalBoundariesAdjuster
+  # over the best interval.
+  def user_hours_for_adjustment(best_day, remainder_intervals, orientation)
+    # we select the hours occupied by the user to remove
+    user_hours = @shifts[best_day].dup.select { |hour, user| user == @user_to_remove.to_s && hour }
+
+    # we mark the hour block in the opposite direction of the remainder interval
+    case orientation
+    when :left
+      remainder_interval = remainder_intervals
+      user_hours[user_hours.keys.last] = nil if remainder_interval[1] - remainder_interval[0] + 1 <= 2
+    when :right
+      remainder_interval = remainder_intervals
+      user_hours[user_hours.keys.first] = nil if remainder_interval[1] - remainder_interval[0] + 1 <= 2
+    when :both
+      left_interval, right_interval = remainder_intervals
+      if left_interval[1] - left_interval[0] > right_interval[1] - right_interval[0]
+        user_hours[user_hours.keys.last] = nil
+      else
+        user_hours[user_hours.keys.first] = nil
       end
     end
 
-    if must_adjust_interval || best_interval[1] - best_interval[0] > @remaining_hours
-      best_interval = [[best_interval[0], user_hours.keys.first].max,
-                       [best_interval[1], user_hours.keys.last].min]
+    user_hours
+  end
 
-      adjusted_interval = IntervalBoundariesAdjuster.build(user_hours, best_interval)
+  # we make one last adjustment to the adjusted interval
+  # Shifts the adjusted best interval block to the left or the right when the area covered leaves a very small
+  # remaining region for the removed user.
+  def shift_adjusted_interval(best_day, adjusted_best_interval, remainder_interval, orientation)
+    initial_length = remainder_interval[1] - remainder_interval[0] + 1
+    shift = orientation == :left ? 1 : -1
+    current_hour = orientation == :left ? remainder_interval[1] : remainder_interval[0]
 
-      remainder_interval = IntervalsManager.remainder_between_intervals_compact(current_user_occupied_interval,
-                                                                                adjusted_interval)
-
-      return [best_day, adjusted_interval] if remainder_interval.blank?
-
-      initial_length = remainder_interval[1] - remainder_interval[0] + 1
-
-      puts "before adjusting ->> adjusted interval: #{adjusted_interval}"
-
-      if orientation == :left
-        current_hour = remainder_interval[1]
-        puts "current hour: #{current_hour}, orientation: #{orientation}, initial length: #{initial_length}"
-        puts "left ->> adjusted interval + 1: #{adjusted_interval[1] + 1}, best interval + 1: #{best_interval[1]}"
-        while initial_length < 3 && @shifts[best_day].key?(current_hour) && @shifts[best_day][current_hour].present? &&
-              adjusted_interval[1] + 1 >= best_interval[1]
-          adjusted_interval = [adjusted_interval[0] + 1, adjusted_interval[1] + 1]
-          current_hour += 1
-          initial_length += 1
-        end
-      elsif orientation == :right
-        current_hour = remainder_interval[0]
-        puts "current hour: #{current_hour}, orientation: #{orientation}, initial length: #{initial_length}"
-        puts "right ->> adjusted interval - 1: #{adjusted_interval[0] - 1}, best interval - 1: #{best_interval[0]}"
-        while initial_length < 3 && @shifts[best_day].key?(current_hour) && @shifts[best_day][current_hour].present? && adjusted_interval[0] - 1 <= best_interval[0]
-          adjusted_interval = [adjusted_interval[0] - 1, adjusted_interval[1] - 1]
-          current_hour -= 1
-          initial_length += 1
-        end
-      end
-
-      puts "final remainder interval: #{remainder_interval}"
-
-      puts "adjusted interval: #{adjusted_interval}"
-
-      [best_day, adjusted_interval]
-    else
-      [best_day, best_interval]
+    while initial_length < 3 && @shifts[best_day].key?(current_hour) && @shifts[best_day][current_hour].present?
+      adjusted_best_interval = IntervalsManager.shift_interval(adjusted_best_interval, shift)
+      current_hour += shift
+      initial_length += 1
     end
+
+    adjusted_best_interval
   end
 
   def find_user_occupied_interval(hours, user)
@@ -166,22 +170,21 @@ class ShiftsFinetuningManager
     nil # Return nil if no interval is found
   end
 
-  def evaluate_sequence(sequence, available_interval)
-    start_hour, end_hour = sequence
-    available_start, available_end = available_interval
-    sequence_hours = end_hour - start_hour + 1
+  def evaluate_interval(user_occupied_interval, candidate_interval)
+    candidate_hours = candidate_interval[1] - candidate_interval[0] + 1
 
-    # Start with base score as the length of sequence
-    score = sequence_hours
-
-    # If this sequence would exceed remaining hours needed, reduce its score
-    score *= 0.5 if sequence_hours > @remaining_hours
+    score = 1
 
     # Bonus for sequences that can be fully covered by available interval
-    score *= 1.5 if available_start <= start_hour && available_end >= end_hour
+    score *= 1.5 if candidate_interval[0] <= user_occupied_interval[0] &&
+                    candidate_interval[1] >= user_occupied_interval[1]
 
-    # Slight preference for longer sequences when we need many hours
-    score *= 1.2 if @remaining_hours > 10 && sequence_hours > 4
+    # ascending preference for longer sequences
+    score *= 1.1 if candidate_hours > 4
+    score *= 1.1 if candidate_hours > 6
+
+    # preference when we need many hours
+    score *= 1.2 if @remaining_hours > 10
 
     score
   end
@@ -189,11 +192,5 @@ class ShiftsFinetuningManager
   def multiple_user_hours?(hours)
     user_ids = hours.select { |hour| hours[hour] }.values.uniq - [nil]
     user_ids.size > 1
-  end
-
-  def single_user_sequence?(hours, sequence)
-    start_hour, end_hour = sequence
-    user_ids = (start_hour..end_hour).map { |hour| hours[hour] }.uniq - [nil]
-    user_ids == [@user_to_remove.to_s]
   end
 end

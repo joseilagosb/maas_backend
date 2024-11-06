@@ -82,5 +82,9 @@ class IntervalsManager
     [[interval1[0], interval2[0]].min, [interval1[1], interval2[1]].max]
   end
 
+  def self.shift_interval(interval, shift)
+    [interval[0] + shift, interval[1] + shift]
+  end
+
   private_class_method :interval_overlap_or_adjacent?, :merge_intervals
 end

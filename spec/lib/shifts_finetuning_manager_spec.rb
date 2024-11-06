@@ -127,8 +127,8 @@ describe ShiftsFinetuningManager do
                                                                             @user_to_add, @user_to_remove,
                                                                             @required_hours_to_remove)
 
-        expect(resulting_days).to eq([3, 5])
-        expect(resulting_intervals).to eq([[16, 18], [13, 16]])
+        expect(resulting_days).to eq([7, 5])
+        expect(resulting_intervals).to eq([[15, 17], [13, 16]])
       end
 
       # case: there are two remaining spaces between the user occupied hours and the best interval
@@ -153,8 +153,8 @@ describe ShiftsFinetuningManager do
                                                                             @user_to_add, @user_to_remove,
                                                                             @required_hours_to_remove)
 
-        expect(resulting_days).to eq([3, 4, 5])
-        expect(resulting_intervals).to eq([[16, 19], [15, 19], [13, 16]])
+        expect(resulting_days).to eq([2])
+        expect(resulting_intervals).to eq([[14, 17]])
       end
     end
   end
