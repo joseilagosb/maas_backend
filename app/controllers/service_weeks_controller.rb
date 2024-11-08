@@ -28,9 +28,11 @@ class ServiceWeeksController < ApplicationController
 
   def update
     parsed_availability = JSON.parse(update_params[:availability])
-    ShiftSchedulerService.new(parsed_availability, 
-                              params[:service_id],
-                              params[:id]).call
+    shifts = ShiftSchedulerService.new(parsed_availability,
+                                       params[:service_id],
+                                       params[:id]).call
+
+    puts shifts
 
     render json: { error: 'Not implemented' }, status: :not_implemented
   end

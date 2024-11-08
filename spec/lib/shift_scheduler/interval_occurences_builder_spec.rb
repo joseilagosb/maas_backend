@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe IntervalOccurrencesBuilder do
+describe ShiftScheduler::IntervalOccurrencesBuilder do
   let(:intervals) { JSON.parse(File.read('spec/fixtures/interval.json')) }
 
   before :each do
@@ -13,7 +13,8 @@ describe IntervalOccurrencesBuilder do
       expected_interval_occurrences = { 8 => { 9 => { occurrences: 2,
                                                       users: ['101'] } } }
       expected_contained_interval = [8, 9]
-      resulting_interval_occurrences = IntervalOccurrencesBuilder.build(@empty_hours, @remaining_intervals)
+      resulting_interval_occurrences = ShiftScheduler::IntervalOccurrencesBuilder.build(@empty_hours,
+                                                                                        @remaining_intervals)
       expect(resulting_interval_occurrences).to eq(expected_interval_occurrences)
       expect(resulting_interval_occurrences.length).to eq(1)
       expect(resulting_interval_occurrences).to have_key(expected_contained_interval[0])
@@ -23,7 +24,8 @@ describe IntervalOccurrencesBuilder do
     it 'returns the correct interval occurrences for multiple users' do
       remaining_intervals_two_users = { '101' => [[8, 9]], '102' => [[8, 9]] }
       expected_contained_interval = [8, 9]
-      resulting_interval_occurrences = IntervalOccurrencesBuilder.build(@empty_hours, remaining_intervals_two_users)
+      resulting_interval_occurrences = ShiftScheduler::IntervalOccurrencesBuilder.build(@empty_hours,
+                                                                                        remaining_intervals_two_users)
       expect(resulting_interval_occurrences).to have_key(expected_contained_interval[0])
       expect(resulting_interval_occurrences[expected_contained_interval[0]]).to have_key(expected_contained_interval[1])
 
@@ -40,11 +42,13 @@ describe IntervalOccurrencesBuilder do
     end
 
     it 'raises an ArgumentError if empty_hours is nil' do
-      expect { IntervalOccurrencesBuilder.build(nil, @remaining_intervals) }.to raise_error(ArgumentError)
+      expect do
+        ShiftScheduler::IntervalOccurrencesBuilder.build(nil, @remaining_intervals)
+      end.to raise_error(ArgumentError)
     end
 
     it 'raises an ArgumentError if remaining_intervals is nil' do
-      expect { IntervalOccurrencesBuilder.build(@empty_hours, nil) }.to raise_error(ArgumentError)
+      expect { ShiftScheduler::IntervalOccurrencesBuilder.build(@empty_hours, nil) }.to raise_error(ArgumentError)
     end
   end
 end

@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe BestIntervalFinder do
+describe ShiftScheduler::BestIntervalFinder do
   let(:intervals) { JSON.parse(File.read('spec/fixtures/interval.json')) }
 
   before :each do
@@ -16,15 +16,15 @@ describe BestIntervalFinder do
         it 'selects the correct interval' do
           expected_interval = [10, 15]
 
-          resulting_interval, = BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
-                                                         @remaining_intervals)
+          resulting_interval, = ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
+                                                                         @remaining_intervals)
           expect(resulting_interval).to eq(expected_interval)
         end
 
         it 'selects the correct user' do
           expected_user = '101'
-          _, resulting_user = BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
-                                                       @remaining_intervals)
+          _, resulting_user = ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
+                                                                       @remaining_intervals)
           expect(resulting_user).to eq(expected_user)
         end
       end
@@ -40,15 +40,15 @@ describe BestIntervalFinder do
         it 'selects the correct interval' do
           expected_interval = [8, 10]
 
-          resulting_interval, = BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
-                                                         @remaining_intervals)
+          resulting_interval, = ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
+                                                                         @remaining_intervals)
           expect(resulting_interval).to eq(expected_interval)
         end
 
         it 'selects the correct user' do
           expected_user = '102'
-          _, resulting_user = BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
-                                                       @remaining_intervals)
+          _, resulting_user = ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours,
+                                                                       @remaining_intervals)
           expect(resulting_user).to eq(expected_user)
         end
       end
@@ -57,17 +57,21 @@ describe BestIntervalFinder do
 
   context 'with invalid parameters' do
     it 'raises an ArgumentError if remaining_hours_by_user is nil' do
-      expect { BestIntervalFinder.build(nil, @empty_hours, @remaining_intervals) }.to raise_error(ArgumentError)
+      expect do
+        ShiftScheduler::BestIntervalFinder.build(nil, @empty_hours, @remaining_intervals)
+      end.to raise_error(ArgumentError)
     end
 
     it 'raises an ArgumentError if empty_hours is nil' do
       expect do
-        BestIntervalFinder.build(@remaining_hours_by_user, nil, @remaining_intervals)
+        ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, nil, @remaining_intervals)
       end.to raise_error(ArgumentError)
     end
 
     it 'raises an ArgumentError if remaining_intervals is nil' do
-      expect { BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours, nil) }.to raise_error(ArgumentError)
+      expect do
+        ShiftScheduler::BestIntervalFinder.build(@remaining_hours_by_user, @empty_hours, nil)
+      end.to raise_error(ArgumentError)
     end
   end
 end

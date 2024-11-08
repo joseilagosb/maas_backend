@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe AvailableIntervalsCreator do
+describe ShiftScheduler::AvailabilityCreator do
   let(:availabilities) do
     JSON.parse(File.read('spec/fixtures/availability.json'))
   end
@@ -10,7 +10,7 @@ describe AvailableIntervalsCreator do
     # Represents a monday to tuesday availability, with the availability of two users of ids 101 and 102
     # Both users are available everyday albeit in different time slots
     context 'base availability' do
-      let(:intervals) { AvailableIntervalsCreator.build(availabilities['base']) }
+      let(:intervals) { ShiftScheduler::AvailabilityCreator.build(availabilities['base']) }
 
       it 'returns the correct number of days' do
         expect(intervals.length).to eq(2)
@@ -48,7 +48,7 @@ describe AvailableIntervalsCreator do
 
     context 'with two intervals in a day' do
       let(:intervals_with_two_intervals_in_a_day) do
-        AvailableIntervalsCreator.build(availabilities['with_two_intervals_in_a_day'])
+        ShiftScheduler::AvailabilityCreator.build(availabilities['with_two_intervals_in_a_day'])
       end
 
       it 'returns two intervals in a single day' do
@@ -66,7 +66,7 @@ describe AvailableIntervalsCreator do
 
     context 'with unavailable user in a day' do
       let(:intervals_with_unavailable_user) do
-        AvailableIntervalsCreator.build(availabilities['with_unavailable_user'])
+        ShiftScheduler::AvailabilityCreator.build(availabilities['with_unavailable_user'])
       end
 
       before :each do
@@ -91,7 +91,7 @@ describe AvailableIntervalsCreator do
 
     context 'empty availability' do
       let(:intervals_with_empty_availability) do
-        AvailableIntervalsCreator.build(availabilities['empty'])
+        ShiftScheduler::AvailabilityCreator.build(availabilities['empty'])
       end
 
       it 'returns an empty hash for each day' do
@@ -108,7 +108,7 @@ describe AvailableIntervalsCreator do
 
   context 'with invalid parameters' do
     it 'raises an ArgumentError' do
-      expect { AvailableIntervalsCreator.build(nil) }.to raise_error(ArgumentError)
+      expect { ShiftScheduler::AvailabilityCreator.build(nil) }.to raise_error(ArgumentError)
     end
   end
 end

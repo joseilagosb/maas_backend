@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe ShiftsFinetuningManager do
+describe ShiftScheduler::FinetuningIntervalsFinder do
   context 'valid parameters' do
     context 'call' do
       it 'case 1' do
@@ -21,9 +21,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 2
         @required_hours_to_remove = 7
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([3])
         expect(resulting_intervals).to eq([[14, 20]])
@@ -45,9 +45,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 1
         @required_hours_to_remove = 8
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([3, 6])
         expect(resulting_intervals).to eq([[18, 20], [15, 17]])
@@ -71,9 +71,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 1
         @required_hours_to_remove = 4
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([6])
         expect(resulting_intervals).to eq([[14, 17]])
@@ -97,9 +97,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 1
         @required_hours_to_remove = 2
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([6])
         expect(resulting_intervals).to eq([[17, 19]])
@@ -123,9 +123,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 1
         @required_hours_to_remove = 6
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([7, 5])
         expect(resulting_intervals).to eq([[15, 17], [13, 16]])
@@ -149,9 +149,9 @@ describe ShiftsFinetuningManager do
         @user_to_remove = 1
         @required_hours_to_remove = 4
 
-        resulting_days, resulting_intervals = ShiftsFinetuningManager.build(@shifts, @user_remaining_intervals,
-                                                                            @user_to_add, @user_to_remove,
-                                                                            @required_hours_to_remove)
+        resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
+          @shifts, @user_remaining_intervals, @user_to_add, @user_to_remove, @required_hours_to_remove
+        )
 
         expect(resulting_days).to eq([2])
         expect(resulting_intervals).to eq([[14, 17]])
