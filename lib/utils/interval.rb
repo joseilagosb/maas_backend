@@ -10,9 +10,7 @@ module Utils
 
     def self.remainder_between_intervals(bigger_interval, smaller_interval)
       return [nil, :equal] if bigger_interval == smaller_interval
-      return [bigger_interval, :overlap_or_adjacent] unless overlap_or_adjacent?(
-        bigger_interval, smaller_interval
-      )
+      return [bigger_interval, :separate_or_adjacent] unless overlap?(bigger_interval, smaller_interval)
 
       # the remainder is in the right bound of the bigger interval
       if smaller_interval[0] <= bigger_interval[0]
@@ -36,8 +34,12 @@ module Utils
       result[0]
     end
 
-    def self.overlap_or_adjacent?(interval1, interval2)
-      interval1[1] >= interval2[0] - 1 && interval2[1] >= interval1[0] - 1
+    def self.overlap?(interval1, interval2)
+      interval1[1] >= interval2[0] && interval2[1] >= interval1[0]
+    end
+
+    def self.adjacent?(interval1, interval2)
+      interval1[1] == interval2[0] - 1 || interval2[1] == interval1[0] - 1
     end
 
     def self.merge(interval1, interval2)

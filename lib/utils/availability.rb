@@ -13,7 +13,8 @@ module Utils
       # that's common when we add an interval with the assign_user_to_hours_interval method
       merged = false
       availability[day][user].each_with_index do |existing_interval, index|
-        next unless Utils::Interval.overlap_or_adjacent?(existing_interval, interval)
+        next unless Utils::Interval.overlap?(existing_interval, interval) ||
+                    Utils::Interval.adjacent?(existing_interval, interval)
 
         # Merge the intervals and replace the existing one
         availability[day][user][index] = Utils::Interval.merge(existing_interval, interval)
