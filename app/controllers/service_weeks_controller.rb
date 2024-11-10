@@ -32,9 +32,29 @@ class ServiceWeeksController < ApplicationController
                                        params[:service_id],
                                        params[:id]).call
 
-    puts shifts
+    return render json: { error: 'Shifts could not be scheduled' }, status: :unprocessable_entity if shifts.blank?
 
-    render json: { error: 'Not implemented' }, status: :not_implemented
+    ActiveRecord::Base.transaction do
+      service_week = ServiceWeek.find_by!(week: params[:id], service_id: params[:service_id])
+
+      shifts.each do |day_number, hours|
+        service_day = service_week.service_days.find_or_create_by!(day: day_number)
+
+        hours.each do |hour_number, user_id|
+          service_hour = service_day.service_hours.find_or_initialize_by(hour: hour_number)
+          designated_user_id = user_id.presence&.to_i
+
+          service_hour.designated_user_id = designated_user_id
+          service_hour.save!
+        end
+      end
+
+      render json: { message: 'Schedule updated successfully' }, status: :ok
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError
+      render json: { error: 'An unexpected error occurred' }, status: :internal_server_error
+    end
   end
 
   private
