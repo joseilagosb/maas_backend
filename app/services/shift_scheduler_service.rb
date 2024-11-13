@@ -161,7 +161,7 @@ class ShiftSchedulerService
         best_neighbor = ShiftScheduler::BestNeighborFinder.build(@shifts[day], @hours_by_user, hour)
 
         if best_neighbor.present?
-          Users::Availability.remove_interval(@availability, day, best_neighbor, [hour, hour])
+          Utils::Availability.remove_interval(@availability, day, best_neighbor, [hour, hour])
           assign_user_to_hours_interval(best_neighbor, day, [hour, hour])
         else
           remove_users_from_hours_interval(day, [hour, hour])
