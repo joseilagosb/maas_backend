@@ -117,6 +117,8 @@ class ShiftSchedulerService
       best_user_days = nil
       best_remaining_hours_variance = Float::INFINITY
 
+      # we run the finetuning intervals finder module for each candidate user
+      # and choose the one that reduces the variance the most (therefore with the best remaining hours balance)
       candidate_users_to_add.each do |user_to_add|
         resulting_days, resulting_intervals = ShiftScheduler::FinetuningIntervalsFinder.build(
           @shifts, user_remaining_intervals(user_to_add), user_to_add, user_to_remove, required_hours_to_remove
@@ -140,6 +142,7 @@ class ShiftSchedulerService
         best_user_days = resulting_days
       end
 
+      # we exit if the variance is not improved from the current one
       break if best_remaining_hours_variance >= Utils::Statistics.variance(@remaining_hours_by_user.values)
 
       best_user_days.each_with_index do |day, index|
@@ -149,6 +152,31 @@ class ShiftSchedulerService
 
       iterations += 1
     end
+
+    # the final finetuning step is to remove the single-hour blocks that remained from the previous iterations
+    @shifts.each do |day, hours|
+      hours.each_key do |hour|
+        next unless single_hour_block?(day, hour)
+
+        best_neighbor = ShiftScheduler::BestNeighborFinder.build(@shifts[day], @hours_by_user, hour)
+
+        if best_neighbor.present?
+          Users::Availability.remove_interval(@availability, day, best_neighbor, [hour, hour])
+          assign_user_to_hours_interval(best_neighbor, day, [hour, hour])
+        else
+          remove_users_from_hours_interval(day, [hour, hour])
+        end
+      end
+    end
+  end
+
+  def single_hour_block?(day, hour)
+    return false if @shifts[day][hour].nil? || @shifts[day][hour].blank?
+
+    return false if (@shifts[day].key?(hour - 1) && @shifts[day][hour - 1] == @shifts[day][hour]) ||
+                    (@shifts[day].key?(hour + 1) && @shifts[day][hour + 1] == @shifts[day][hour])
+
+    true
   end
 
   def changes_if_adding_interval(user, day, interval)
@@ -187,6 +215,20 @@ class ShiftSchedulerService
     end
   end
 
+  def remove_users_from_hours_interval(day, hours_interval)
+    (hours_interval[0]..hours_interval[1]).each do |hour|
+      previous_user = @shifts[day][hour]
+
+      @shifts[day][hour] = nil
+
+      @remaining_hours_by_user[previous_user] += 1 if previous_user
+      @hours_by_user[previous_user] -= 1 if previous_user
+      @remaining_hours += 1 if previous_user
+
+      Utils::Availability.add_interval(@availability, day, previous_user, [hour, hour]) if previous_user
+    end
+  end
+
   def unbalanced_users
     remaining_hours_average = @remaining_hours_by_user.values.sum / @remaining_hours_by_user.size
 
@@ -213,7 +255,7 @@ class ShiftSchedulerService
                               .where(service_id:, week:)
                               .order('service_days.day ASC, service_hours.hour ASC')
                               .first
-    
+
     service_week.service_days.each_with_object({}) do |service_day, result|
       result[service_day.day] = service_day.service_hours.each_with_object({}) do |service_hour, day_result|
         day_result[service_hour.hour] = nil
