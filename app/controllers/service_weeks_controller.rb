@@ -28,6 +28,9 @@ class ServiceWeeksController < ApplicationController
 
   def update
     parsed_availability = JSON.parse(update_params[:availability])
+    parsed_availability_changes = JSON.parse(update_params[:availability_changes])
+    current_user_id = update_params[:user_id]
+
     shifts = ShiftSchedulerService.new(parsed_availability,
                                        params[:service_id],
                                        params[:id]).call
@@ -45,6 +48,19 @@ class ServiceWeeksController < ApplicationController
           designated_user_id = user_id.presence&.to_i
 
           service_hour.designated_user_id = designated_user_id
+
+          day_key = day_number.to_s
+          hour_key = hour_number.to_s
+
+          if parsed_availability_changes.key?(day_key) && parsed_availability_changes[day_key].key?(hour_key.to_s)
+            current_user = User.find(current_user_id)
+            if parsed_availability_changes[day_key][hour_key]['marked']
+              service_hour.users << current_user
+            else
+              service_hour.users.delete(current_user)
+            end
+          end
+
           service_hour.save!
         end
       end
@@ -60,6 +76,6 @@ class ServiceWeeksController < ApplicationController
   private
 
   def update_params
-    params.require(:service_week).permit(:service_id, :availability, :week)
+    params.require(:service_week).permit(:service_id, :availability, :availability_changes, :week, :user_id)
   end
 end
