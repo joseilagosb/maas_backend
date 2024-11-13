@@ -84,7 +84,7 @@ module ShiftScheduler
       # we fit the interval in the user's occupied hours space
       user_hours = user_hours_for_adjustment(best_day, remainder_intervals, orientation)
       best_interval = [[best_interval[0], user_hours.keys.first].max,
-                      [best_interval[1], user_hours.keys.last].min]
+                       [best_interval[1], user_hours.keys.last].min]
 
       # we adjust the best interval so that it uses half of the user to remove's hours
       adjusted_interval = ShiftScheduler::IntervalBoundariesAdjuster.build(user_hours, best_interval)
@@ -99,7 +99,7 @@ module ShiftScheduler
       # selects the second interval (the right one) as it will assume a left shift
       remainder_interval = remainder_interval[1] if remainder_interval[1].is_a?(Array)
 
-      shift_adjusted_interval(best_day, adjusted_interval, remainder_interval, orientation)
+      shift_adjusted_interval(best_interval, adjusted_interval, remainder_interval, orientation)
     end
 
     def must_adjust_interval?(best_interval, remainder_orientation)
@@ -138,12 +138,14 @@ module ShiftScheduler
     # we make one last adjustment to the adjusted interval
     # Shifts the adjusted best interval block to the left or the right when the area covered leaves a very small
     # remaining region for the removed user.
-    def shift_adjusted_interval(best_day, adjusted_best_interval, remainder_interval, orientation)
+    def shift_adjusted_interval(original_best_interval, adjusted_best_interval, remainder_interval, orientation)
       initial_length = Utils::Interval.length(remainder_interval)
       spaces = orientation == :left ? 1 : -1
-      current_hour = orientation == :left ? remainder_interval[1] : remainder_interval[0]
+      current_hour = orientation == :left ? remainder_interval[0] : remainder_interval[1]
 
-      while initial_length < 3 && @shifts[best_day].key?(current_hour) && @shifts[best_day][current_hour].present?
+      while initial_length < 3 &&
+            original_best_interval[0] <= adjusted_best_interval[0] + spaces &&
+            original_best_interval[1] >= adjusted_best_interval[1] + spaces
         adjusted_best_interval = Utils::Interval.shift(adjusted_best_interval, spaces)
         current_hour += spaces
         initial_length += 1

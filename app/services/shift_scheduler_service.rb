@@ -209,7 +209,11 @@ class ShiftSchedulerService
   end
 
   def initialize_shifts(service_id, week)
-    service_week = ServiceWeek.includes(service_days: :service_hours).find_by(service_id:, week:)
+    service_week = ServiceWeek.includes(service_days: :service_hours)
+                              .where(service_id:, week:)
+                              .order('service_days.day ASC, service_hours.hour ASC')
+                              .first
+    
     service_week.service_days.each_with_object({}) do |service_day, result|
       result[service_day.day] = service_day.service_hours.each_with_object({}) do |service_hour, day_result|
         day_result[service_hour.hour] = nil
