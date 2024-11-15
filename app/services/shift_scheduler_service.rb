@@ -6,12 +6,15 @@ class ShiftSchedulerService
   end
 
   def call
+    # no changes are made if there's only one user available
+    return @shifts if Utils::Availability.all_available_users(@availability).size == 1
+
     filling_round
     merging_round
     finetuning_round
+
     Logging::ShiftSchedulerLogger.call(@shifts, @remaining_hours_by_user, @hours_by_user, @remaining_hours,
                                        @availability, 'Final shifts distribution')
-
     @shifts
   end
 
@@ -40,7 +43,8 @@ class ShiftSchedulerService
     randomized_days.each_cons(2) do |day, next_day|
       # we assign the hours from the selected user to the shifts hash
       next_interval = Utils::Availability.pop_interval(@availability, day, next_user)
-      assign_user_to_hours_interval(next_user, day, next_interval)
+      
+      assign_user_to_hours_interval(next_user, day, next_interval) unless next_interval.nil?
 
       # As long as it's not the last day of the week...
       break if next_day.nil?
@@ -251,10 +255,7 @@ class ShiftSchedulerService
   end
 
   def initialize_shifts(service_id, week)
-    service_week = ServiceWeek.includes(service_days: :service_hours)
-                              .where(service_id:, week:)
-                              .order('service_days.day ASC, service_hours.hour ASC')
-                              .first
+    service_week = ServiceWeekFindOrCreateQuery.new(options: { service_id:, week: }).call
 
     service_week.service_days.each_with_object({}) do |service_day, result|
       result[service_day.day] = service_day.service_hours.each_with_object({}) do |service_hour, day_result|

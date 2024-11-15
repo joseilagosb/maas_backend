@@ -1,32 +1,5 @@
 require 'faker'
 
-def random_availability_intervals__OLD
-  intervals = []
-  
-  # Decide if the user is unavailable on this day (e.g., 10% chance)
-  return intervals if rand < 0.1
-
-  # Start by assigning a larger interval
-  first_interval_start = rand(8..10)
-  first_interval_end = rand((first_interval_start + 4)..17)
-  intervals << (first_interval_start..first_interval_end)
-
-  # Potentially add a second interval if it doesn't overlap with the first
-  if rand < 0.7 # 70% chance of having a second interval
-    second_interval_start = rand((first_interval_end + 1)..19)
-    second_interval_end = rand([second_interval_start + 2, 22].min..22)
-    intervals << (second_interval_start..second_interval_end) unless first_interval_end >= second_interval_start
-  end
-
-  # If the intervals don't cover enough hours, extend one of them
-  total_hours_covered = intervals.sum { |interval| interval.size }
-  if total_hours_covered < 10 && rand < 0.5
-    intervals[0] = (first_interval_start..[first_interval_end + (10 - total_hours_covered), 22].min)
-  end
-
-  intervals
-end
-
 # Method to generate random availability intervals
 def random_availability_intervals(hours)
   # If there are no hours (it's not a working day), return an empty array
@@ -100,11 +73,11 @@ admins = User.create!([
   { name: "Pepe", email: "pepe@maas.com", password: 'contrasena_admin', role: :admin, color: :green },
 ])
 
-SERVICES_LENGTH = 3
+SERVICES_LENGTH = 4
 
 USERS_LENGTH = 3
 
-service_type = ["mobile", "analytics", "web", "api", "financial"]
+service_type = ["mobile", "analytics", "web", "api", "financial", "ai"]
 
 service_descriptions = [
   "Plataforma colaborativa para la planificación, ejecución y seguimiento de proyectos, con herramientas de gestión de tareas, tiempos y recursos.",
@@ -125,6 +98,7 @@ service_hours = [
   { weekdays: (17..22).to_a, weekends: (12..23).to_a },
   { weekdays: (13..20).to_a, weekends: (10..20).to_a },
   { weekdays: (9..15).to_a, weekends: [] },
+  { weekdays: (9..15).to_a, weekends: (10..21).to_a },
 ]
 
 # Method to find available users for a given hour and day
