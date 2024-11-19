@@ -1,8 +1,8 @@
 class ServiceWeeksController < ApplicationController
   def show
     service_week = ServiceWeekFindOrCreateQuery.new(options: { service_id: params[:service_id], week: params[:id] },
-                                                     includes: { service_days: { service_hours: [:designated_user] } })
-                                                .call
+                                                    includes: { service_days: { service_hours: [:designated_user] } })
+                                               .call
 
     render json: ServiceWeekSerializer.new(service_week, {
                                              include: %i[
@@ -16,8 +16,8 @@ class ServiceWeeksController < ApplicationController
 
   def edit
     service_week = ServiceWeekFindOrCreateQuery.new(options: { service_id: params[:service_id], week: params[:id] },
-                                                     includes: { service_days: { service_hours: [:users] } })
-                                                .call
+                                                    includes: { service_days: { service_hours: [:users] } })
+                                               .call
     render json: ServiceWeekSerializer.new(service_week, {
                                              include: %i[
                                                service_days

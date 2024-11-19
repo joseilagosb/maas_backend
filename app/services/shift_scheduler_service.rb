@@ -43,7 +43,7 @@ class ShiftSchedulerService
     randomized_days.each_cons(2) do |day, next_day|
       # we assign the hours from the selected user to the shifts hash
       next_interval = Utils::Availability.pop_interval(@availability, day, next_user)
-      
+
       assign_user_to_hours_interval(next_user, day, next_interval) unless next_interval.nil?
 
       # As long as it's not the last day of the week...
