@@ -120,6 +120,44 @@ The procedure is repeated until there's no users with negative remaining hours o
 
 Finally, if that's the case, the single hour blocks remaining in the shifts hash are addressed in a final iteration. If a single hour block is found, the `BestNeighborFinder` module looks for its neighbor hours and selects the user with the least hours and is also present in the availability hash. The selected user single hour interval is then added and therefore merged to that user's hours block. If there is no consensus, the hour block is set to null.
 
+### Example usage
+
+To illustrate how this algorithm works, we'll use the following availability hash.
+
+```ruby
+{
+  1=>{"1"=>[[17, 20]], "2"=>[[18, 21]], "3"=>[[18, 22]]}, 
+  2=>{"2"=>[[17, 20]], "3"=>[[19, 21]]}, 
+  3=>{"1"=>[[18, 21]], "3"=>[[18, 20]], "2"=>[[20, 22]]}, 
+  4=>{"1"=>[[17, 22]], "3"=>[[17, 20]], "2"=>[[18, 20]]}, 
+  5=>{"2"=>[[19, 21]], "1"=>[[20, 22]]}, 
+  6=>{"2"=>[[12, 23]], "3"=>[[12, 21]], "1"=>[[13, 22]]}, 
+  7=>{"1"=>[[12, 17]], "2"=>[[15, 22]], "3"=>[[15, 23]]}
+}
+```
+
+The current state of both the shifts and availability hashes before the execution is shown in the image below. The service requires a total of 54 hours to be filled, which one of them is not possible to be filled due to user availability constraints (wednesday at 17:00).
+
+![shift-scheduler-initial-state](img/shift-scheduler-initial-state.png)
+
+#### After the first round
+
+Having finished the filling round, each user in the shifts hash has a user assigned, and the corresponding interval has been removed from the availability hash. However, as shown in the following image, approximately one third of the total hours remain empty.
+
+![shift-scheduler-first-round](img/shift-scheduler-first-round.png)
+
+#### After the second round
+
+The merging round incorporated seven intervals into the shifts hash, removing fragments of the original hour blocks from the first round and subsequently adding them back to the availability hash. However, the resulting schedule shows a significant imbalance in the distribution of hours between users, especially between users '1' and '3'.
+
+![shift-scheduler-second-round](img/shift-scheduler-second-round.png)
+
+#### After the third round
+
+Finally, the fine-tuning round solved the issues of unbalanced distribution of hours between users. While the change is subtle, it resulted in a lower variance in hours per user compared to the previous stage.
+
+![shift-scheduler-third-round](img/shift-scheduler-third-round.png)
+
 ## Relational model
 
 The tables used in the project are the following:
@@ -142,7 +180,7 @@ The tables used in the project are the following:
 
 1. **ServiceWorkingDays**: Contains information about the work days monitored in the system.
 
-![maas-mr](maas-mr.png)
+![maas-mr](img/maas-mr.png)
 
 ## Tech Stack
 
